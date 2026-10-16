@@ -43,6 +43,8 @@ class AlarmReceiver : BroadcastReceiver() {
             putExtra(AlarmScheduler.EXTRA_ALARM_ID, alarmId)
             putExtra(AlarmScheduler.EXTRA_ALARM_LABEL, alarmLabel)
             putExtra(AlarmScheduler.EXTRA_BARCODE_VALUE, barcodeValue)
+            putExtra(AlarmScheduler.EXTRA_RINGTONE_URI, ringtoneUri)
+            putExtra(AlarmScheduler.EXTRA_VIBRATE, vibrate)
         }
         context.startActivity(activityIntent)
 

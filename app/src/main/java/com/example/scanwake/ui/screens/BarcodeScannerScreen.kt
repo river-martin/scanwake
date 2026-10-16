@@ -2,6 +2,7 @@ package com.example.scanwake.ui.screens
 
 import android.Manifest
 import android.content.pm.PackageManager
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.CameraSelector
@@ -19,8 +20,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -56,8 +61,16 @@ fun BarcodeScannerScreen(
     titleText: String = "Scan Barcode",
     instructionText: String = "Align barcode within frame",
     onBarcodeScanned: (String) -> Unit,
-    onSaveAndUseBarcode: ((barcodeValue: String, label: String) -> Unit)? = null
+    onSaveAndUseBarcode: ((barcodeValue: String, label: String) -> Unit)? = null,
+    onFailsafeClick: (() -> Unit)? = null,
+    onBackClick: (() -> Unit)? = null
 ) {
+    if (onBackClick != null) {
+        BackHandler {
+            onBackClick()
+        }
+    }
+
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
 
@@ -198,6 +211,49 @@ fun BarcodeScannerScreen(
                 )
             }
 
+            // Back button if onBackClick is provided
+            if (onBackClick != null) {
+                IconButton(
+                    onClick = onBackClick,
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .padding(top = 48.dp, start = 16.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back",
+                        tint = Color.White
+                    )
+                }
+            }
+
+            // Emergency Failsafe Button at bottom
+            if (onFailsafeClick != null) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 40.dp, start = 24.dp, end = 24.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Button(
+                        onClick = onFailsafeClick,
+                        colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.errorContainer,
+                            contentColor = MaterialTheme.colorScheme.onErrorContainer
+                        ),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = "⚠️ Can't scan barcode? (Emergency Failsafe)",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.sp
+                        )
+                    }
+                }
+            }
+
             // Save Barcode Dialog
             scannedCodeHolder?.let { code ->
                 AlertDialog(
@@ -214,33 +270,46 @@ fun BarcodeScannerScreen(
                             OutlinedTextField(
                                 value = barcodeLabelInput,
                                 onValueChange = { barcodeLabelInput = it },
-                                label = { Text("Name this item (Optional)") },
+                                label = { Text("Name this barcode (Required)") },
                                 placeholder = { Text("e.g. Toothpaste, Coffee Cup") },
                                 singleLine = true,
+                                isError = barcodeLabelInput.isBlank(),
                                 modifier = Modifier.fillMaxWidth()
                             )
+                            if (barcodeLabelInput.isBlank()) {
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = "A label is required to assign this barcode",
+                                    color = MaterialTheme.colorScheme.error,
+                                    fontSize = 12.sp
+                                )
+                            }
                         }
                     },
                     confirmButton = {
                         Button(
                             onClick = {
-                                val labelToSave = if (barcodeLabelInput.isBlank()) "Saved Barcode" else barcodeLabelInput.trim()
-                                onSaveAndUseBarcode?.invoke(code, labelToSave)
-                                onBarcodeScanned(code)
-                                scannedCodeHolder = null
-                            }
+                                val labelToSave = barcodeLabelInput.trim()
+                                if (labelToSave.isNotBlank()) {
+                                    onSaveAndUseBarcode?.invoke(code, labelToSave)
+                                    onBarcodeScanned(code)
+                                    scannedCodeHolder = null
+                                    barcodeLabelInput = ""
+                                }
+                            },
+                            enabled = barcodeLabelInput.isNotBlank()
                         ) {
-                            Text("Save & Use")
+                            Text("Assign Barcode")
                         }
                     },
                     dismissButton = {
                         TextButton(
                             onClick = {
-                                onBarcodeScanned(code)
                                 scannedCodeHolder = null
+                                barcodeLabelInput = ""
                             }
                         ) {
-                            Text("Use Without Saving")
+                            Text("Cancel")
                         }
                     }
                 )

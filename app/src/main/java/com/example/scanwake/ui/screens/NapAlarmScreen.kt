@@ -1,5 +1,6 @@
  package com.example.scanwake.ui.screens
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -60,6 +61,7 @@ fun NapAlarmScreen(
     scannedBarcode: String? = null,
     onScanBarcodeClick: () -> Unit,
     onSaveAlarm: (Alarm) -> Unit,
+    onDeleteBarcode: (SavedBarcode) -> Unit,
     onBackClick: () -> Unit
 ) {
     var napDurationMinutes by remember { mutableIntStateOf(30) }
@@ -91,6 +93,10 @@ fun NapAlarmScreen(
     val locale = remember { Locale.getDefault() }
     val targetTimeFormatted = String.format(locale, "%02d:%02d", targetHour, targetMinute)
 
+    BackHandler {
+        onBackClick()
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -110,9 +116,13 @@ fun NapAlarmScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
-                .padding(16.dp)
-                .verticalScroll(rememberScrollState()),
+                .verticalScroll(rememberScrollState())
+                .padding(
+                    top = paddingValues.calculateTopPadding() + 16.dp,
+                    bottom = paddingValues.calculateBottomPadding() + 16.dp,
+                    start = 16.dp,
+                    end = 16.dp
+                ),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Live Nap Ring Time Target Display
@@ -265,7 +275,8 @@ fun NapAlarmScreen(
                 barcodeValue = barcodeValue,
                 savedBarcodes = savedBarcodes,
                 onSelectBarcode = { newValue -> barcodeValue = newValue },
-                onScanBarcodeClick = onScanBarcodeClick
+                onScanBarcodeClick = onScanBarcodeClick,
+                onDeleteBarcode = onDeleteBarcode
             )
 
             Spacer(modifier = Modifier.height(32.dp))

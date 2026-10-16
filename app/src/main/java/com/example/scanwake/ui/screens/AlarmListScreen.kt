@@ -4,6 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -21,6 +22,7 @@ import androidx.compose.material.icons.filled.Alarm
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material.icons.filled.VerifiedUser
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
@@ -46,11 +48,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.scanwake.data.model.Alarm
+import com.example.scanwake.data.model.SavedBarcode
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AlarmListScreen(
     alarms: List<Alarm>,
+    savedBarcodes: List<SavedBarcode> = emptyList(),
+    onReliabilityClick: () -> Unit,
     onAddAlarmClick: () -> Unit,
     onAddNapAlarmClick: () -> Unit,
     onEditAlarmClick: (Alarm) -> Unit,
@@ -67,6 +72,15 @@ fun AlarmListScreen(
                         text = "ScanWake",
                         fontWeight = FontWeight.Bold
                     )
+                },
+                actions = {
+                    IconButton(onClick = onReliabilityClick) {
+                        Icon(
+                            imageVector = Icons.Default.VerifiedUser,
+                            contentDescription = "Reliability Checklist",
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
@@ -122,14 +136,13 @@ fun AlarmListScreen(
         }
     ) { paddingValues ->
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
+            modifier = Modifier.fillMaxSize()
         ) {
             if (alarms.isEmpty()) {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
+                        .padding(paddingValues)
                         .padding(32.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
@@ -155,14 +168,19 @@ fun AlarmListScreen(
                 }
             } else {
                 LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(
+                        top = paddingValues.calculateTopPadding() + 16.dp,
+                        bottom = paddingValues.calculateBottomPadding() + 16.dp,
+                        start = 16.dp,
+                        end = 16.dp
+                    ),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(alarms, key = { it.id }) { alarm ->
                         AlarmItemCard(
                             alarm = alarm,
+                            savedBarcodes = savedBarcodes,
                             onClick = { onEditAlarmClick(alarm) },
                             onToggle = { isEnabled -> onToggleAlarm(alarm, isEnabled) },
                             onDelete = { onDeleteAlarm(alarm) }
@@ -177,10 +195,25 @@ fun AlarmListScreen(
 @Composable
 fun AlarmItemCard(
     alarm: Alarm,
+    savedBarcodes: List<SavedBarcode>,
     onClick: () -> Unit,
     onToggle: (Boolean) -> Unit,
     onDelete: () -> Unit
 ) {
+    val matchedSaved = if (alarm.barcodeValue.isNotBlank()) {
+        savedBarcodes.find { it.barcodeValue == alarm.barcodeValue }
+    } else null
+
+    val barcodeText = if (alarm.barcodeValue.isNotBlank()) {
+        if (matchedSaved != null) {
+            "Barcode: ${matchedSaved.label}"
+        } else {
+            "Specific Barcode Assigned"
+        }
+    } else {
+        "Any Barcode (Default)"
+    }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -238,11 +271,7 @@ fun AlarmItemCard(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = if (alarm.barcodeValue.isNotBlank()) {
-                            "Specific Barcode Assigned"
-                        } else {
-                            "Any Barcode (Default)"
-                        },
+                        text = barcodeText,
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.primary
                     )

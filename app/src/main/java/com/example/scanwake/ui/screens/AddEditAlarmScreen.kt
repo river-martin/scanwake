@@ -1,5 +1,6 @@
 package com.example.scanwake.ui.screens
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -55,6 +56,7 @@ fun AddEditAlarmScreen(
     scannedBarcode: String? = null,
     onScanBarcodeClick: () -> Unit,
     onSaveAlarm: (Alarm) -> Unit,
+    onDeleteBarcode: (SavedBarcode) -> Unit,
     onBackClick: () -> Unit
 ) {
     val calendar = Calendar.getInstance()
@@ -87,6 +89,10 @@ fun AddEditAlarmScreen(
         Calendar.SUNDAY to "S"
     )
 
+    BackHandler {
+        onBackClick()
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -108,9 +114,13 @@ fun AddEditAlarmScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
-                .padding(16.dp)
-                .verticalScroll(rememberScrollState()),
+                .verticalScroll(rememberScrollState())
+                .padding(
+                    top = paddingValues.calculateTopPadding() + 16.dp,
+                    bottom = paddingValues.calculateBottomPadding() + 16.dp,
+                    start = 16.dp,
+                    end = 16.dp
+                ),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Time Picker
@@ -169,7 +179,8 @@ fun AddEditAlarmScreen(
                 barcodeValue = barcodeValue,
                 savedBarcodes = savedBarcodes,
                 onSelectBarcode = { newValue -> barcodeValue = newValue },
-                onScanBarcodeClick = onScanBarcodeClick
+                onScanBarcodeClick = onScanBarcodeClick,
+                onDeleteBarcode = onDeleteBarcode
             )
 
             Spacer(modifier = Modifier.height(32.dp))

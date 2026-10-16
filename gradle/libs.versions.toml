@@ -16,6 +16,8 @@ room3Runtime = "3.0.3"
 zxingCpp = "3.1.1"
 
 [libraries]
+androidx-compose-material-icons-core = { module = "androidx.compose.material:material-icons-core" }
+androidx-compose-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-room3-compiler = { module = "androidx.room3:room3-compiler", version.ref = "room3Runtime" }
 androidx-room3-runtime = { module = "androidx.room3:room3-runtime", version.ref = "room3Runtime" }

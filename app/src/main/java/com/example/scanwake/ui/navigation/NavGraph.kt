@@ -1,5 +1,8 @@
 package com.example.scanwake.ui.navigation
 
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -28,6 +31,7 @@ object NavRoutes {
     const val ADD_EDIT_ALARM = "add_edit_alarm?alarmId={alarmId}"
     const val NAP_ALARM = "nap_alarm"
     const val BARCODE_SCANNER = "barcode_scanner"
+    const val RELIABILITY_CHECKLIST = "reliability_checklist"
 
     fun addEditAlarmRoute(alarmId: Long? = null): String {
         return if (alarmId != null) "add_edit_alarm?alarmId=$alarmId" else "add_edit_alarm"
@@ -39,6 +43,10 @@ fun ScanWakeNavGraph() {
     val context = LocalContext.current
     val navController = rememberNavController()
     val scope = rememberCoroutineScope()
+
+    val prefs = remember { context.getSharedPreferences("scanwake_prefs", android.content.Context.MODE_PRIVATE) }
+    val isFirstLaunch = remember { prefs.getBoolean("is_first_launch", true) }
+    val startDestination = if (isFirstLaunch) NavRoutes.RELIABILITY_CHECKLIST else NavRoutes.ALARM_LIST
 
     val database = remember { ScanWakeDatabase.getDatabase(context) }
     val repository = remember { AlarmRepository(database.alarmDao(), database.savedBarcodeDao()) }
@@ -52,12 +60,35 @@ fun ScanWakeNavGraph() {
 
     NavHost(
         navController = navController,
-        startDestination = NavRoutes.ALARM_LIST
+        startDestination = startDestination,
+        enterTransition = { fadeIn(animationSpec = tween(220)) },
+        exitTransition = { fadeOut(animationSpec = tween(220)) },
+        popEnterTransition = { fadeIn(animationSpec = tween(220)) },
+        popExitTransition = { fadeOut(animationSpec = tween(220)) }
     ) {
+        // Reliability Checklist Screen (First Launch & Manual Inspection)
+        composable(NavRoutes.RELIABILITY_CHECKLIST) {
+            com.example.scanwake.ui.screens.ReliabilityChecklistScreen(
+                onContinueClick = {
+                    prefs.edit().putBoolean("is_first_launch", false).apply()
+                    navController.navigate(NavRoutes.ALARM_LIST) {
+                        popUpTo(NavRoutes.RELIABILITY_CHECKLIST) { inclusive = true }
+                    }
+                },
+                onBackClick = if (isFirstLaunch) null else {
+                    { navController.popBackStack() }
+                }
+            )
+        }
+
         // Alarm List Screen
         composable(NavRoutes.ALARM_LIST) {
             AlarmListScreen(
                 alarms = alarms,
+                savedBarcodes = savedBarcodes,
+                onReliabilityClick = {
+                    navController.navigate(NavRoutes.RELIABILITY_CHECKLIST)
+                },
                 onAddAlarmClick = {
                     tempScannedBarcode = null
                     navController.navigate(NavRoutes.addEditAlarmRoute())
@@ -123,6 +154,11 @@ fun ScanWakeNavGraph() {
                         navController.popBackStack()
                     }
                 },
+                onDeleteBarcode = { barcode ->
+                    scope.launch {
+                        repository.deleteSavedBarcode(barcode)
+                    }
+                },
                 onBackClick = {
                     tempScannedBarcode = null
                     navController.popBackStack()
@@ -144,6 +180,11 @@ fun ScanWakeNavGraph() {
                         scheduler.schedule(napAlarm.copy(id = newId))
                         tempScannedBarcode = null
                         navController.popBackStack()
+                    }
+                },
+                onDeleteBarcode = { barcode ->
+                    scope.launch {
+                        repository.deleteSavedBarcode(barcode)
                     }
                 },
                 onBackClick = {
@@ -171,6 +212,9 @@ fun ScanWakeNavGraph() {
                             )
                         )
                     }
+                },
+                onBackClick = {
+                    navController.popBackStack()
                 }
             )
         }
