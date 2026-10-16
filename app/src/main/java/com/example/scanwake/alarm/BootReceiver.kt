@@ -18,7 +18,7 @@ class BootReceiver : BroadcastReceiver() {
         ) {
             CoroutineScope(Dispatchers.IO).launch {
                 val db = ScanWakeDatabase.getDatabase(context)
-                val repo = AlarmRepository(db.alarmDao())
+                val repo = AlarmRepository(db.alarmDao(), db.savedBarcodeDao())
                 val scheduler = AlarmScheduler(context)
 
                 val enabledAlarms = repo.getEnabledAlarms()

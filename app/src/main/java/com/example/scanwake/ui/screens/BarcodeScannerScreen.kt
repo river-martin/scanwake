@@ -19,9 +19,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -51,10 +55,14 @@ import java.util.concurrent.Executors
 fun BarcodeScannerScreen(
     titleText: String = "Scan Barcode",
     instructionText: String = "Align barcode within frame",
-    onBarcodeScanned: (String) -> Unit
+    onBarcodeScanned: (String) -> Unit,
+    onSaveAndUseBarcode: ((barcodeValue: String, label: String) -> Unit)? = null
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
+
+    var scannedCodeHolder by remember { mutableStateOf<String?>(null) }
+    var barcodeLabelInput by remember { mutableStateOf("") }
 
     var hasCameraPermission by remember {
         mutableStateOf(
@@ -104,7 +112,13 @@ fun BarcodeScannerScreen(
                             executor,
                             BarcodeAnalyzer { barcodeText ->
                                 ContextCompat.getMainExecutor(ctx).execute {
-                                    onBarcodeScanned(barcodeText)
+                                    if (onSaveAndUseBarcode != null) {
+                                        if (scannedCodeHolder == null) {
+                                            scannedCodeHolder = barcodeText
+                                        }
+                                    } else {
+                                        onBarcodeScanned(barcodeText)
+                                    }
                                 }
                             }
                         )
@@ -181,6 +195,54 @@ fun BarcodeScannerScreen(
                     fontSize = 14.sp,
                     color = Color.White.copy(alpha = 0.8f),
                     textAlign = TextAlign.Center
+                )
+            }
+
+            // Save Barcode Dialog
+            scannedCodeHolder?.let { code ->
+                AlertDialog(
+                    onDismissRequest = { scannedCodeHolder = null },
+                    title = { Text("Barcode Scanned!") },
+                    text = {
+                        Column {
+                            Text(
+                                text = "Code: $code",
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+                            OutlinedTextField(
+                                value = barcodeLabelInput,
+                                onValueChange = { barcodeLabelInput = it },
+                                label = { Text("Name this item (Optional)") },
+                                placeholder = { Text("e.g. Toothpaste, Coffee Cup") },
+                                singleLine = true,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                    },
+                    confirmButton = {
+                        Button(
+                            onClick = {
+                                val labelToSave = if (barcodeLabelInput.isBlank()) "Saved Barcode" else barcodeLabelInput.trim()
+                                onSaveAndUseBarcode?.invoke(code, labelToSave)
+                                onBarcodeScanned(code)
+                                scannedCodeHolder = null
+                            }
+                        ) {
+                            Text("Save & Use")
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(
+                            onClick = {
+                                onBarcodeScanned(code)
+                                scannedCodeHolder = null
+                            }
+                        ) {
+                            Text("Use Without Saving")
+                        }
+                    }
                 )
             }
         } else {

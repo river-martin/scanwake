@@ -15,6 +15,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.scanwake.alarm.AlarmScheduler
 import com.example.scanwake.data.local.ScanWakeDatabase
+import com.example.scanwake.data.model.SavedBarcode
 import com.example.scanwake.data.repository.AlarmRepository
 import com.example.scanwake.ui.screens.AddEditAlarmScreen
 import com.example.scanwake.ui.screens.AlarmListScreen
@@ -40,10 +41,11 @@ fun ScanWakeNavGraph() {
     val scope = rememberCoroutineScope()
 
     val database = remember { ScanWakeDatabase.getDatabase(context) }
-    val repository = remember { AlarmRepository(database.alarmDao()) }
+    val repository = remember { AlarmRepository(database.alarmDao(), database.savedBarcodeDao()) }
     val scheduler = remember { AlarmScheduler(context) }
 
     val alarms by repository.allAlarms.collectAsState(initial = emptyList())
+    val savedBarcodes by repository.allSavedBarcodes.collectAsState(initial = emptyList())
 
     // Temporary holder for barcode scanned in AddEdit or Nap screen
     var tempScannedBarcode by remember { mutableStateOf<String?>(null) }
@@ -103,6 +105,7 @@ fun ScanWakeNavGraph() {
 
             AddEditAlarmScreen(
                 initialAlarm = initialAlarm,
+                savedBarcodes = savedBarcodes,
                 scannedBarcode = tempScannedBarcode,
                 onScanBarcodeClick = {
                     navController.navigate(NavRoutes.BARCODE_SCANNER)
@@ -130,6 +133,7 @@ fun ScanWakeNavGraph() {
         // Dedicated Nap Alarm Screen
         composable(NavRoutes.NAP_ALARM) {
             NapAlarmScreen(
+                savedBarcodes = savedBarcodes,
                 scannedBarcode = tempScannedBarcode,
                 onScanBarcodeClick = {
                     navController.navigate(NavRoutes.BARCODE_SCANNER)
@@ -157,6 +161,16 @@ fun ScanWakeNavGraph() {
                 onBarcodeScanned = { scannedCode ->
                     tempScannedBarcode = scannedCode
                     navController.popBackStack()
+                },
+                onSaveAndUseBarcode = { barcodeVal, label ->
+                    scope.launch {
+                        repository.insertSavedBarcode(
+                            SavedBarcode(
+                                label = label,
+                                barcodeValue = barcodeVal
+                            )
+                        )
+                    }
                 }
             )
         }

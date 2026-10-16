@@ -44,12 +44,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.scanwake.data.model.Alarm
+import com.example.scanwake.data.model.SavedBarcode
 import java.util.Calendar
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun AddEditAlarmScreen(
     initialAlarm: Alarm? = null,
+    savedBarcodes: List<SavedBarcode> = emptyList(),
     scannedBarcode: String? = null,
     onScanBarcodeClick: () -> Unit,
     onSaveAlarm: (Alarm) -> Unit,
@@ -215,18 +217,56 @@ fun AddEditAlarmScreen(
                     Spacer(modifier = Modifier.height(8.dp))
 
                     if (barcodeValue.isNotBlank()) {
+                        val matchedSaved = savedBarcodes.find { it.barcodeValue == barcodeValue }
+                        val displayText = if (matchedSaved != null) {
+                            "Assigned: ${matchedSaved.label} (${matchedSaved.barcodeValue})"
+                        } else {
+                            "Assigned Barcode: $barcodeValue"
+                        }
+
                         Text(
-                            text = "Assigned Barcode: $barcodeValue",
+                            text = displayText,
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.primary
                         )
                     } else {
                         Text(
-                            text = "No barcode assigned yet. Scan a barcode on any household item (toothpaste, cereal box, book) to require scanning it when alarm goes off.",
+                            text = "No barcode assigned yet. Scan a barcode on any household item or pick from your saved barcodes below.",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
+                    }
+
+                    if (savedBarcodes.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = "Pick From Saved Barcodes:",
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+
+                        FlowRow(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            savedBarcodes.forEach { savedItem ->
+                                val isSelected = barcodeValue == savedItem.barcodeValue
+                                FilterChip(
+                                    selected = isSelected,
+                                    onClick = { barcodeValue = savedItem.barcodeValue },
+                                    label = {
+                                        Text(
+                                            text = savedItem.label,
+                                            fontSize = 12.sp
+                                        )
+                                    }
+                                )
+                            }
+                        }
                     }
 
                     Spacer(modifier = Modifier.height(16.dp))
@@ -242,7 +282,7 @@ fun AddEditAlarmScreen(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = if (barcodeValue.isBlank()) "Scan Barcode Now" else "Re-scan Barcode"
+                            text = if (barcodeValue.isBlank()) "Scan New Barcode" else "Scan Different Barcode"
                         )
                     }
                 }

@@ -50,7 +50,7 @@ class AlarmReceiver : BroadcastReceiver() {
         if (alarmId != -1L) {
             CoroutineScope(Dispatchers.IO).launch {
                 val db = ScanWakeDatabase.getDatabase(context)
-                val repo = AlarmRepository(db.alarmDao())
+                val repo = AlarmRepository(db.alarmDao(), db.savedBarcodeDao())
                 val alarm = repo.getAlarmById(alarmId)
                 if (alarm != null) {
                     if (alarm.daysOfWeek.isBlank()) {

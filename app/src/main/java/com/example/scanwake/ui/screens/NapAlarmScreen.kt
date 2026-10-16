@@ -18,11 +18,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.QrCodeScanner
-import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -46,12 +46,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.scanwake.data.model.Alarm
+import com.example.scanwake.data.model.SavedBarcode
 import java.util.Calendar
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun NapAlarmScreen(
+    savedBarcodes: List<SavedBarcode> = emptyList(),
     scannedBarcode: String? = null,
     onScanBarcodeClick: () -> Unit,
     onSaveAlarm: (Alarm) -> Unit,
@@ -130,12 +132,6 @@ fun NapAlarmScreen(
                         .padding(24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Timer,
-                        contentDescription = null,
-                        modifier = Modifier.padding(bottom = 8.dp),
-                        tint = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
                     Text(
                         text = targetTimeFormatted,
                         fontSize = 48.sp,
@@ -263,18 +259,56 @@ fun NapAlarmScreen(
                     Spacer(modifier = Modifier.height(8.dp))
 
                     if (barcodeValue.isNotBlank()) {
+                        val matchedSaved = savedBarcodes.find { it.barcodeValue == barcodeValue }
+                        val displayText = if (matchedSaved != null) {
+                            "Assigned: ${matchedSaved.label} (${matchedSaved.barcodeValue})"
+                        } else {
+                            "Assigned Barcode: $barcodeValue"
+                        }
+
                         Text(
-                            text = "Assigned Barcode: $barcodeValue",
+                            text = displayText,
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.primary
                         )
                     } else {
                         Text(
-                            text = "Scan a barcode on any household item to require scanning it when the nap alarm rings.",
+                            text = "Scan a barcode on any household item or pick from your saved barcodes below.",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
+                    }
+
+                    if (savedBarcodes.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = "Pick From Saved Barcodes:",
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+
+                        FlowRow(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            savedBarcodes.forEach { savedItem ->
+                                val isSelected = barcodeValue == savedItem.barcodeValue
+                                FilterChip(
+                                    selected = isSelected,
+                                    onClick = { barcodeValue = savedItem.barcodeValue },
+                                    label = {
+                                        Text(
+                                            text = savedItem.label,
+                                            fontSize = 12.sp
+                                        )
+                                    }
+                                )
+                            }
+                        }
                     }
 
                     Spacer(modifier = Modifier.height(16.dp))
@@ -290,7 +324,7 @@ fun NapAlarmScreen(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = if (barcodeValue.isBlank()) "Scan Barcode Now" else "Re-scan Barcode"
+                            text = if (barcodeValue.isBlank()) "Scan New Barcode" else "Scan Different Barcode"
                         )
                     }
                 }
