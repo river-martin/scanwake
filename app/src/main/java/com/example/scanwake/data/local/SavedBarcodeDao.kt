@@ -14,6 +14,9 @@ interface SavedBarcodeDao {
     @Query("SELECT * FROM saved_barcodes ORDER BY label ASC")
     fun getAllSavedBarcodes(): Flow<List<SavedBarcode>>
 
+    @Query("SELECT * FROM saved_barcodes WHERE barcodeValue = :value LIMIT 1")
+    suspend fun getSavedBarcodeByValue(value: String): SavedBarcode?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSavedBarcode(savedBarcode: SavedBarcode): Long
 

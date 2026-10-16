@@ -35,12 +35,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.scanwake.alarm.AlarmScheduler
 import com.example.scanwake.alarm.AlarmService
+import com.example.scanwake.data.local.ScanWakeDatabase
+import com.example.scanwake.data.repository.AlarmRepository
 import com.example.scanwake.ui.theme.ScanWakeTheme
 import kotlinx.coroutines.delay
 
@@ -91,6 +94,18 @@ class AlarmRingingActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
+                    val context = LocalContext.current
+                    val database = remember { ScanWakeDatabase.getDatabase(context) }
+                    val repository = remember { AlarmRepository(database.alarmDao(), database.savedBarcodeDao()) }
+                    var barcodeLabel by remember { mutableStateOf<String?>(null) }
+
+                    LaunchedEffect(requiredBarcode) {
+                        if (requiredBarcode.isNotBlank()) {
+                            val saved = repository.getSavedBarcodeByValue(requiredBarcode)
+                            barcodeLabel = saved?.label
+                        }
+                    }
+
                     var wrongBarcodeScanned by remember { mutableStateOf<String?>(null) }
                     var isFailsafeActive by remember { mutableStateOf(false) }
 
@@ -134,7 +149,11 @@ class AlarmRingingActivity : ComponentActivity() {
                             BarcodeScannerScreen(
                                 titleText = if (alarmLabel.isNotBlank()) alarmLabel else "ALARM RINGING",
                                 instructionText = if (requiredBarcode.isNotBlank()) {
-                                    "Scan assigned barcode to dismiss"
+                                    if (barcodeLabel != null) {
+                                        "Scan assigned barcode: $barcodeLabel"
+                                    } else {
+                                        "Scan assigned barcode to dismiss"
+                                    }
                                 } else {
                                     "Scan ANY barcode to dismiss"
                                 },

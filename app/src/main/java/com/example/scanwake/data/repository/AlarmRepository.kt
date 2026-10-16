@@ -42,6 +42,10 @@ class AlarmRepository(
         return savedBarcodeDao.insertSavedBarcode(savedBarcode)
     }
 
+    suspend fun getSavedBarcodeByValue(value: String): SavedBarcode? {
+        return savedBarcodeDao.getSavedBarcodeByValue(value)
+    }
+
     suspend fun deleteSavedBarcode(savedBarcode: SavedBarcode) {
         savedBarcodeDao.deleteSavedBarcode(savedBarcode)
     }
