@@ -206,7 +206,7 @@ fun AddEditAlarmScreen(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "Required Barcode to Dismiss",
+                            text = "Barcode to Dismiss",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )

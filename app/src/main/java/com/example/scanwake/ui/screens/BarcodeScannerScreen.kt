@@ -103,7 +103,9 @@ fun BarcodeScannerScreen(
                         imageAnalysis.setAnalyzer(
                             executor,
                             BarcodeAnalyzer { barcodeText ->
-                                onBarcodeScanned(barcodeText)
+                                ContextCompat.getMainExecutor(ctx).execute {
+                                    onBarcodeScanned(barcodeText)
+                                }
                             }
                         )
 

@@ -9,7 +9,14 @@ class BarcodeAnalyzer(
     private val onBarcodeScanned: (String) -> Unit
 ) : ImageAnalysis.Analyzer {
 
-    private val reader = BarcodeReader()
+    private val reader = BarcodeReader().apply {
+        options = BarcodeReader.Options().apply {
+            tryHarder = true
+            tryRotate = true
+            tryInvert = true
+        }
+    }
+
     private var lastScannedTime = 0L
     private val scanThrottleMs = 1500L
 
@@ -24,14 +31,14 @@ class BarcodeAnalyzer(
         try {
             val results = reader.read(imageProxy)
             if (results.isNotEmpty()) {
-                val scannedText = results.first().text
-                if (!scannedText.isNullOrBlank()) {
+                val text = results.first().text
+                if (!text.isNullOrBlank()) {
                     lastScannedTime = currentTime
-                    onBarcodeScanned(scannedText)
+                    onBarcodeScanned(text)
                 }
             }
         } catch (e: Exception) {
-            // Frame processing handled
+            e.printStackTrace()
         } finally {
             imageProxy.close()
         }
