@@ -234,25 +234,17 @@ fun AlarmItemCard(
                         imageVector = Icons.Default.QrCodeScanner,
                         contentDescription = null,
                         modifier = Modifier.size(16.dp),
-                        tint = if (alarm.barcodeValue.isNotBlank()) {
-                            MaterialTheme.colorScheme.primary
-                        } else {
-                            MaterialTheme.colorScheme.error
-                        }
+                        tint = MaterialTheme.colorScheme.primary
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = if (alarm.barcodeValue.isNotBlank()) {
-                            "Barcode Assigned"
+                            "Specific Barcode Assigned"
                         } else {
-                            "No Barcode Assigned"
+                            "Any Barcode (Default)"
                         },
                         fontSize = 12.sp,
-                        color = if (alarm.barcodeValue.isNotBlank()) {
-                            MaterialTheme.colorScheme.primary
-                        } else {
-                            MaterialTheme.colorScheme.error
-                        }
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
             }

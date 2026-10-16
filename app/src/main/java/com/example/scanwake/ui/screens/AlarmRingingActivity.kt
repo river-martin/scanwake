@@ -5,8 +5,13 @@ import android.os.Bundle
 import android.view.WindowManager
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -17,6 +22,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -31,11 +37,23 @@ import androidx.compose.ui.unit.sp
 import com.example.scanwake.alarm.AlarmScheduler
 import com.example.scanwake.alarm.AlarmService
 import com.example.scanwake.ui.theme.ScanWakeTheme
+import kotlinx.coroutines.delay
 
 class AlarmRingingActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Prevent exiting alarm ringing screen via Back Button or Back Gesture
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                Toast.makeText(
+                    this@AlarmRingingActivity,
+                    "Scan the assigned barcode to dismiss alarm!",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        })
 
         // Enable show over lockscreen & turn screen on
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
@@ -59,7 +77,15 @@ class AlarmRingingActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    var statusMessage by remember { mutableStateOf<String?>(null) }
+                    var wrongBarcodeScanned by remember { mutableStateOf<String?>(null) }
+
+                    // Auto-clear wrong barcode error banner after 2 seconds to keep scanning continuous
+                    LaunchedEffect(wrongBarcodeScanned) {
+                        if (wrongBarcodeScanned != null) {
+                            delay(2200)
+                            wrongBarcodeScanned = null
+                        }
+                    }
 
                     Box(modifier = Modifier.fillMaxSize()) {
                         BarcodeScannerScreen(
@@ -83,36 +109,43 @@ class AlarmRingingActivity : ComponentActivity() {
                                     ).show()
                                     finish()
                                 } else {
-                                    statusMessage = "Wrong Barcode! Scan the assigned item."
+                                    wrongBarcodeScanned = scannedValue
                                 }
                             }
                         )
 
-                        // Error Status Banner if user scans wrong barcode
-                        statusMessage?.let { msg ->
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .align(Alignment.BottomCenter)
-                                    .background(Color.Red.copy(alpha = 0.9f))
-                                    .padding(16.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Text(
-                                        text = msg,
-                                        color = Color.White,
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 16.sp,
-                                        textAlign = TextAlign.Center
-                                    )
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    Text(
-                                        text = "Required: $requiredBarcode",
-                                        color = Color.White.copy(alpha = 0.9f),
-                                        fontSize = 12.sp,
-                                        textAlign = TextAlign.Center
-                                    )
+                        // Error Status Banner when wrong barcode is detected
+                        AnimatedVisibility(
+                            visible = wrongBarcodeScanned != null,
+                            enter = fadeIn(),
+                            exit = fadeOut(),
+                            modifier = Modifier.align(Alignment.BottomCenter)
+                        ) {
+                            wrongBarcodeScanned?.let { scannedCode ->
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .background(Color.Red.copy(alpha = 0.92f))
+                                        .clickable { wrongBarcodeScanned = null }
+                                        .padding(20.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                        Text(
+                                            text = "❌ Wrong Barcode Scanned ($scannedCode)",
+                                            color = Color.White,
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 16.sp,
+                                            textAlign = TextAlign.Center
+                                        )
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text(
+                                            text = "Keep camera pointed at assigned barcode...",
+                                            color = Color.White.copy(alpha = 0.9f),
+                                            fontSize = 13.sp,
+                                            textAlign = TextAlign.Center
+                                        )
+                                    }
                                 }
                             }
                         }

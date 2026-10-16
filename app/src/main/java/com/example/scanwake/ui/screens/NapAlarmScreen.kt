@@ -1,4 +1,4 @@
-package com.example.scanwake.ui.screens
+ package com.example.scanwake.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -15,7 +15,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material3.Button
@@ -35,6 +35,7 @@ import androidx.compose.material3.SuggestionChipDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -47,8 +48,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.scanwake.data.model.Alarm
 import com.example.scanwake.data.model.SavedBarcode
+import com.example.scanwake.ui.components.BarcodeAssignmentCard
 import java.util.Calendar
 import java.util.Locale
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -60,20 +63,33 @@ fun NapAlarmScreen(
     onBackClick: () -> Unit
 ) {
     var napDurationMinutes by remember { mutableIntStateOf(30) }
+    var fallAsleepBufferMinutes by remember { mutableIntStateOf(0) }
     var label by remember { mutableStateOf("Nap (${napDurationMinutes}m)") }
     var barcodeValue by remember { mutableStateOf(scannedBarcode ?: "") }
 
-    val presetOptions = listOf(15, 30, 45, 60, 90, 100)
+    val presetOptions = listOf(20, 30, 60, 90)
 
-    // Calculate target ring time
-    val targetCalendar = Calendar.getInstance().apply {
-        add(Calendar.MINUTE, napDurationMinutes)
+    var currentTimeMillis by remember { mutableStateOf(System.currentTimeMillis()) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(10_000) // update every 10 seconds to keep target time live if user stays on screen
+            currentTimeMillis = System.currentTimeMillis()
+        }
+    }
+
+    val totalMinutes = napDurationMinutes + fallAsleepBufferMinutes
+
+    // Calculate target ring time dynamically based on current time ticker
+    val targetCalendar = remember(currentTimeMillis, totalMinutes) {
+        Calendar.getInstance().apply {
+            timeInMillis = currentTimeMillis
+            add(Calendar.MINUTE, totalMinutes)
+        }
     }
     val targetHour = targetCalendar.get(Calendar.HOUR_OF_DAY)
     val targetMinute = targetCalendar.get(Calendar.MINUTE)
-    val targetTimeFormatted = remember(targetHour, targetMinute) {
-        String.format(Locale.getDefault(), "%02d:%02d", targetHour, targetMinute)
-    }
+    val locale = remember { Locale.getDefault() }
+    val targetTimeFormatted = String.format(locale, "%02d:%02d", targetHour, targetMinute)
 
     Scaffold(
         topBar = {
@@ -82,31 +98,12 @@ fun NapAlarmScreen(
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(
-                            imageVector = Icons.Default.ArrowBack,
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back"
                         )
                     }
                 },
-                actions = {
-                    IconButton(
-                        onClick = {
-                            val napAlarm = Alarm(
-                                hour = targetHour,
-                                minute = targetMinute,
-                                daysOfWeek = "", // One-time alarm, no repeat
-                                isEnabled = true,
-                                label = if (label.isBlank()) "Nap (${napDurationMinutes}m)" else label,
-                                barcodeValue = barcodeValue
-                            )
-                            onSaveAlarm(napAlarm)
-                        }
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Check,
-                            contentDescription = "Save Nap Alarm"
-                        )
-                    }
-                }
+                actions = {}
             )
         }
     ) { paddingValues ->
@@ -140,7 +137,11 @@ fun NapAlarmScreen(
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "Alarm will ring in $napDurationMinutes minutes",
+                        text = if (fallAsleepBufferMinutes > 0) {
+                            "Alarm rings in $totalMinutes min ($napDurationMinutes min nap + $fallAsleepBufferMinutes min buffer)"
+                        } else {
+                            "Alarm will ring in $napDurationMinutes minutes"
+                        },
                         style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.Medium,
                         color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
@@ -193,6 +194,36 @@ fun NapAlarmScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
+            // Time to Fall Asleep Buffer
+            Text(
+                text = "Time to Fall Asleep Buffer",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.align(Alignment.Start)
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                val bufferOptions = listOf(0, 5, 10)
+                bufferOptions.forEach { bufferMinutes ->
+                    val isSelected = fallAsleepBufferMinutes == bufferMinutes
+                    FilterChip(
+                        selected = isSelected,
+                        onClick = { fallAsleepBufferMinutes = bufferMinutes },
+                        label = {
+                            Text(
+                                text = if (bufferMinutes == 0) "Off" else "$bufferMinutes min"
+                            )
+                        }
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
             // Duration Slider
             Text(
                 text = "Custom Duration: $napDurationMinutes minutes",
@@ -230,105 +261,12 @@ fun NapAlarmScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             // Barcode Assignment Card
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant
-                )
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(20.dp)
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.QrCodeScanner,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "Barcode to Dismiss",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    if (barcodeValue.isNotBlank()) {
-                        val matchedSaved = savedBarcodes.find { it.barcodeValue == barcodeValue }
-                        val displayText = if (matchedSaved != null) {
-                            "Assigned: ${matchedSaved.label} (${matchedSaved.barcodeValue})"
-                        } else {
-                            "Assigned Barcode: $barcodeValue"
-                        }
-
-                        Text(
-                            text = displayText,
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    } else {
-                        Text(
-                            text = "Scan a barcode on any household item or pick from your saved barcodes below.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-
-                    if (savedBarcodes.isNotEmpty()) {
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(
-                            text = "Pick From Saved Barcodes:",
-                            style = MaterialTheme.typography.bodySmall,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Spacer(modifier = Modifier.height(6.dp))
-
-                        FlowRow(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(6.dp),
-                            verticalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            savedBarcodes.forEach { savedItem ->
-                                val isSelected = barcodeValue == savedItem.barcodeValue
-                                FilterChip(
-                                    selected = isSelected,
-                                    onClick = { barcodeValue = savedItem.barcodeValue },
-                                    label = {
-                                        Text(
-                                            text = savedItem.label,
-                                            fontSize = 12.sp
-                                        )
-                                    }
-                                )
-                            }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    OutlinedButton(
-                        onClick = onScanBarcodeClick,
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.QrCodeScanner,
-                            contentDescription = null
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = if (barcodeValue.isBlank()) "Scan New Barcode" else "Scan Different Barcode"
-                        )
-                    }
-                }
-            }
+            BarcodeAssignmentCard(
+                barcodeValue = barcodeValue,
+                savedBarcodes = savedBarcodes,
+                onSelectBarcode = { newValue -> barcodeValue = newValue },
+                onScanBarcodeClick = onScanBarcodeClick
+            )
 
             Spacer(modifier = Modifier.height(32.dp))
 

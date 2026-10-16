@@ -25,6 +25,10 @@ class AlarmService : Service() {
     private var mediaPlayer: MediaPlayer? = null
     private var vibrator: Vibrator? = null
 
+    private var currentAlarmId: Long = -1L
+    private var currentAlarmLabel: String = ""
+    private var currentBarcodeValue: String = ""
+
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -33,29 +37,29 @@ class AlarmService : Service() {
             return START_NOT_STICKY
         }
 
-        val alarmId = intent?.getLongExtra(AlarmScheduler.EXTRA_ALARM_ID, -1L) ?: -1L
-        val alarmLabel = intent?.getStringExtra(AlarmScheduler.EXTRA_ALARM_LABEL) ?: ""
-        val barcodeValue = intent?.getStringExtra(AlarmScheduler.EXTRA_BARCODE_VALUE) ?: ""
+        currentAlarmId = intent?.getLongExtra(AlarmScheduler.EXTRA_ALARM_ID, -1L) ?: -1L
+        currentAlarmLabel = intent?.getStringExtra(AlarmScheduler.EXTRA_ALARM_LABEL) ?: ""
+        currentBarcodeValue = intent?.getStringExtra(AlarmScheduler.EXTRA_BARCODE_VALUE) ?: ""
         val ringtoneUriStr = intent?.getStringExtra(AlarmScheduler.EXTRA_RINGTONE_URI) ?: ""
         val vibrate = intent?.getBooleanExtra(AlarmScheduler.EXTRA_VIBRATE, true) ?: true
 
         createNotificationChannel()
 
         val fullScreenIntent = Intent(this, AlarmRingingActivity::class.java).apply {
-            putExtra(AlarmScheduler.EXTRA_ALARM_ID, alarmId)
-            putExtra(AlarmScheduler.EXTRA_ALARM_LABEL, alarmLabel)
-            putExtra(AlarmScheduler.EXTRA_BARCODE_VALUE, barcodeValue)
+            putExtra(AlarmScheduler.EXTRA_ALARM_ID, currentAlarmId)
+            putExtra(AlarmScheduler.EXTRA_ALARM_LABEL, currentAlarmLabel)
+            putExtra(AlarmScheduler.EXTRA_BARCODE_VALUE, currentBarcodeValue)
             setFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
         }
 
         val fullScreenPendingIntent = PendingIntent.getActivity(
             this,
-            alarmId.toInt(),
+            currentAlarmId.toInt(),
             fullScreenIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        val title = if (alarmLabel.isNotBlank()) alarmLabel else "Alarm Ringing"
+        val title = if (currentAlarmLabel.isNotBlank()) currentAlarmLabel else "Alarm Ringing"
         val notification: Notification = NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle(title)
             .setContentText("Scan barcode to dismiss alarm")
@@ -74,6 +78,20 @@ class AlarmService : Service() {
         }
 
         return START_STICKY
+    }
+
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        super.onTaskRemoved(rootIntent)
+        // If alarm service is actively ringing when app is swiped away from Recents, re-launch AlarmRingingActivity immediately
+        if (mediaPlayer?.isPlaying == true) {
+            val fullScreenIntent = Intent(this, AlarmRingingActivity::class.java).apply {
+                putExtra(AlarmScheduler.EXTRA_ALARM_ID, currentAlarmId)
+                putExtra(AlarmScheduler.EXTRA_ALARM_LABEL, currentAlarmLabel)
+                putExtra(AlarmScheduler.EXTRA_BARCODE_VALUE, currentBarcodeValue)
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            }
+            startActivity(fullScreenIntent)
+        }
     }
 
     private fun startRingtone(uriStr: String) {
