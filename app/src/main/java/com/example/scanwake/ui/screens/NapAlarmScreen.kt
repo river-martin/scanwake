@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -127,7 +128,9 @@ fun NapAlarmScreen(
         ) {
             // Live Nap Ring Time Target Display
             Card(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .widthIn(max = 500.dp)
+                    .fillMaxWidth(),
                 shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer
@@ -166,12 +169,16 @@ fun NapAlarmScreen(
                 text = "Quick Presets",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.align(Alignment.Start)
+                modifier = Modifier
+                    .widthIn(max = 500.dp)
+                    .fillMaxWidth()
             )
             Spacer(modifier = Modifier.height(8.dp))
 
             FlowRow(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .widthIn(max = 500.dp)
+                    .fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
@@ -209,12 +216,16 @@ fun NapAlarmScreen(
                 text = "Time to Fall Asleep Buffer",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.align(Alignment.Start)
+                modifier = Modifier
+                    .widthIn(max = 500.dp)
+                    .fillMaxWidth()
             )
             Spacer(modifier = Modifier.height(8.dp))
 
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .widthIn(max = 500.dp)
+                    .fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 val bufferOptions = listOf(0, 5, 10)
@@ -239,7 +250,9 @@ fun NapAlarmScreen(
                 text = "Custom Duration: $napDurationMinutes minutes",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.align(Alignment.Start)
+                modifier = Modifier
+                    .widthIn(max = 500.dp)
+                    .fillMaxWidth()
             )
             Spacer(modifier = Modifier.height(4.dp))
 
@@ -253,7 +266,9 @@ fun NapAlarmScreen(
                 },
                 valueRange = 5f..180f,
                 steps = 34, // 5 min increments
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .widthIn(max = 500.dp)
+                    .fillMaxWidth()
             )
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -264,7 +279,9 @@ fun NapAlarmScreen(
                 onValueChange = { label = it },
                 label = { Text("Alarm Label") },
                 placeholder = { Text("e.g. Afternoon Nap") },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .widthIn(max = 500.dp)
+                    .fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp)
             )
 
@@ -276,7 +293,8 @@ fun NapAlarmScreen(
                 savedBarcodes = savedBarcodes,
                 onSelectBarcode = { newValue -> barcodeValue = newValue },
                 onScanBarcodeClick = onScanBarcodeClick,
-                onDeleteBarcode = onDeleteBarcode
+                onDeleteBarcode = onDeleteBarcode,
+                modifier = Modifier.widthIn(max = 500.dp)
             )
 
             Spacer(modifier = Modifier.height(32.dp))
@@ -295,6 +313,7 @@ fun NapAlarmScreen(
                     onSaveAlarm(napAlarm)
                 },
                 modifier = Modifier
+                    .widthIn(max = 500.dp)
                     .fillMaxWidth()
                     .height(52.dp),
                 shape = RoundedCornerShape(12.dp)

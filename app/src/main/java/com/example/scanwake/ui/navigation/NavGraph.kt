@@ -18,6 +18,8 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.scanwake.alarm.AlarmScheduler
 import com.example.scanwake.data.local.ScanWakeDatabase
+import com.example.scanwake.data.model.Alarm
+import com.example.scanwake.alarm.BootAlarmStorage
 import com.example.scanwake.data.model.SavedBarcode
 import com.example.scanwake.data.repository.AlarmRepository
 import com.example.scanwake.ui.screens.AddEditAlarmScreen
@@ -107,18 +109,52 @@ fun ScanWakeNavGraph() {
                         repository.updateAlarm(updated)
                         if (isEnabled) {
                             scheduler.schedule(updated)
+                            BootAlarmStorage.save(context, updated)
                         } else {
                             scheduler.cancel(updated)
+                            BootAlarmStorage.remove(context, updated.id)
                         }
                     }
                 },
                 onDeleteAlarm = { alarm ->
                     scope.launch {
                         scheduler.cancel(alarm)
+                        BootAlarmStorage.remove(context, alarm.id)
                         repository.deleteAlarm(alarm)
                     }
                 }
             )
+        }
+
+        val saveAndScheduleAlarm: (Alarm) -> Unit = { alarmToSave ->
+            scope.launch {
+                if (alarmToSave.id == 0L) {
+                    val newId = repository.insertAlarm(alarmToSave)
+                    val newAlarm = alarmToSave.copy(id = newId)
+                    scheduler.schedule(newAlarm)
+                    BootAlarmStorage.save(context, newAlarm)
+                } else {
+                    repository.updateAlarm(alarmToSave)
+                    scheduler.schedule(alarmToSave)
+                    BootAlarmStorage.save(context, alarmToSave)
+                }
+                tempScannedBarcode = null
+                navController.popBackStack()
+            }
+        }
+
+        val openBarcodeScanner = {
+            navController.navigate(NavRoutes.BARCODE_SCANNER)
+        }
+
+        val deleteBarcode: (SavedBarcode) -> Unit = { barcode -> scope.launch {
+            repository.deleteSavedBarcode(barcode)
+        }
+        }
+
+        val navBack: () -> Unit = {
+            tempScannedBarcode = null
+            navController.popBackStack()
         }
 
         // Add / Edit Normal Alarm Screen
@@ -134,35 +170,15 @@ fun ScanWakeNavGraph() {
             val alarmId = backStackEntry.arguments?.getLong("alarmId") ?: -1L
             val initialAlarm = alarms.find { it.id == alarmId }
 
+
             AddEditAlarmScreen(
                 initialAlarm = initialAlarm,
                 savedBarcodes = savedBarcodes,
                 scannedBarcode = tempScannedBarcode,
-                onScanBarcodeClick = {
-                    navController.navigate(NavRoutes.BARCODE_SCANNER)
-                },
-                onSaveAlarm = { alarmToSave ->
-                    scope.launch {
-                        if (alarmToSave.id == 0L) {
-                            val newId = repository.insertAlarm(alarmToSave)
-                            scheduler.schedule(alarmToSave.copy(id = newId))
-                        } else {
-                            repository.updateAlarm(alarmToSave)
-                            scheduler.schedule(alarmToSave)
-                        }
-                        tempScannedBarcode = null
-                        navController.popBackStack()
-                    }
-                },
-                onDeleteBarcode = { barcode ->
-                    scope.launch {
-                        repository.deleteSavedBarcode(barcode)
-                    }
-                },
-                onBackClick = {
-                    tempScannedBarcode = null
-                    navController.popBackStack()
-                }
+                onScanBarcodeClick = openBarcodeScanner,
+                onSaveAlarm = saveAndScheduleAlarm,
+                onDeleteBarcode = deleteBarcode,
+                onBackClick = navBack
             )
         }
 
@@ -171,26 +187,10 @@ fun ScanWakeNavGraph() {
             NapAlarmScreen(
                 savedBarcodes = savedBarcodes,
                 scannedBarcode = tempScannedBarcode,
-                onScanBarcodeClick = {
-                    navController.navigate(NavRoutes.BARCODE_SCANNER)
-                },
-                onSaveAlarm = { napAlarm ->
-                    scope.launch {
-                        val newId = repository.insertAlarm(napAlarm)
-                        scheduler.schedule(napAlarm.copy(id = newId))
-                        tempScannedBarcode = null
-                        navController.popBackStack()
-                    }
-                },
-                onDeleteBarcode = { barcode ->
-                    scope.launch {
-                        repository.deleteSavedBarcode(barcode)
-                    }
-                },
-                onBackClick = {
-                    tempScannedBarcode = null
-                    navController.popBackStack()
-                }
+                onScanBarcodeClick = openBarcodeScanner,
+                onSaveAlarm = saveAndScheduleAlarm,
+                onDeleteBarcode = deleteBarcode,
+                onBackClick = navBack
             )
         }
 

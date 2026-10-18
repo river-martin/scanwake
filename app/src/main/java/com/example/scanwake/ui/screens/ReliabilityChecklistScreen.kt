@@ -17,16 +17,17 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.Alarm
 import androidx.compose.material.icons.filled.BatteryChargingFull
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.Warning
@@ -139,11 +140,13 @@ fun ReliabilityChecklistScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp)
+                    .padding(16.dp),
+                contentAlignment = Alignment.Center
             ) {
                 Button(
                     onClick = onContinueClick,
                     modifier = Modifier
+                        .widthIn(max = 500.dp)
                         .fillMaxWidth()
                         .height(52.dp),
                     shape = RoundedCornerShape(12.dp)
@@ -165,22 +168,29 @@ fun ReliabilityChecklistScreen(
                 start = 16.dp,
                 end = 16.dp
             ),
+            horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             item {
-                Text(
-                    text = "Ensure 100% Alarm Reliability",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "To guarantee your alarms always ring on time and won't be suppressed by Doze mode or device manufacturers, please complete the checks below.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Spacer(modifier = Modifier.height(4.dp))
+                Column(
+                    modifier = Modifier
+                        .widthIn(max = 500.dp)
+                        .fillMaxWidth()
+                ) {
+                    Text(
+                        text = "Ensure 100% Alarm Reliability",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "To guarantee your alarms always ring on time and won't be suppressed by Doze mode or device manufacturers, please complete the checks below.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                }
             }
 
             // 1. Exact Alarms
@@ -191,7 +201,10 @@ fun ReliabilityChecklistScreen(
                     description = "Required to trigger alarms at the precise minute without Doze mode delays.",
                     isGranted = exactAlarmGranted,
                     actionText = "Open Settings",
-                    onActionClick = { ReliabilityUtils.openExactAlarmSettings(context) }
+                    onActionClick = { ReliabilityUtils.openExactAlarmSettings(context) },
+                    modifier = Modifier
+                        .widthIn(max = 500.dp)
+                        .fillMaxWidth()
                 )
             }
 
@@ -209,7 +222,10 @@ fun ReliabilityChecklistScreen(
                         } else {
                             ReliabilityUtils.openNotificationSettings(context)
                         }
-                    }
+                    },
+                    modifier = Modifier
+                        .widthIn(max = 500.dp)
+                        .fillMaxWidth()
                 )
             }
 
@@ -223,7 +239,10 @@ fun ReliabilityChecklistScreen(
                     actionText = "Grant Camera",
                     onActionClick = {
                         cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
-                    }
+                    },
+                    modifier = Modifier
+                        .widthIn(max = 500.dp)
+                        .fillMaxWidth()
                 )
             }
 
@@ -235,14 +254,20 @@ fun ReliabilityChecklistScreen(
                     description = "Prevents Android from killing the background alarm worker and media playback.",
                     isGranted = batteryOptimizationIgnored,
                     actionText = "Disable Optimization",
-                    onActionClick = { ReliabilityUtils.openBatteryOptimizationSettings(context) }
+                    onActionClick = { ReliabilityUtils.openBatteryOptimizationSettings(context) },
+                    modifier = Modifier
+                        .widthIn(max = 500.dp)
+                        .fillMaxWidth()
                 )
             }
 
             // 5. OEM / Don't Kill My App
             item {
                 OemReliabilityCard(
-                    onOpenGuideClick = { ReliabilityUtils.openDontKillMyApp(context) }
+                    onOpenGuideClick = { ReliabilityUtils.openDontKillMyApp(context) },
+                    modifier = Modifier
+                        .widthIn(max = 500.dp)
+                        .fillMaxWidth()
                 )
             }
         }
@@ -256,10 +281,11 @@ fun ReliabilityCard(
     description: String,
     isGranted: Boolean,
     actionText: String,
-    onActionClick: () -> Unit
+    onActionClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier,
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
@@ -346,10 +372,11 @@ fun ReliabilityCard(
 
 @Composable
 fun OemReliabilityCard(
-    onOpenGuideClick: () -> Unit
+    onOpenGuideClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier,
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
@@ -359,7 +386,7 @@ fun OemReliabilityCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp)
-            ) {
+        ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {

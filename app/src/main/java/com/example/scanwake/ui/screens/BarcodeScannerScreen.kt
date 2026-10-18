@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -158,8 +159,9 @@ fun BarcodeScannerScreen(
 
             // Scanning Viewfinder Overlay
             Canvas(modifier = Modifier.fillMaxSize()) {
-                val boxWidth = size.width * 0.8f
-                val boxHeight = size.width * 0.5f
+                val maxBoxWidth = 380.dp.toPx()
+                val boxWidth = minOf(size.width * 0.8f, maxBoxWidth)
+                val boxHeight = boxWidth * 0.55f
                 val left = (size.width - boxWidth) / 2
                 val top = (size.height - boxHeight) / 2.5f
 
@@ -243,7 +245,9 @@ fun BarcodeScannerScreen(
                             contentColor = MaterialTheme.colorScheme.onErrorContainer
                         ),
                         shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier
+                            .widthIn(max = 500.dp)
+                            .fillMaxWidth()
                     ) {
                         Text(
                             text = "⚠️ Can't scan barcode? (Emergency Failsafe)",

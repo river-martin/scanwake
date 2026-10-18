@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -133,12 +134,16 @@ fun AddEditAlarmScreen(
                 text = "Repeat Days",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.align(Alignment.Start)
+                modifier = Modifier
+                    .widthIn(max = 500.dp)
+                    .fillMaxWidth()
             )
             Spacer(modifier = Modifier.height(8.dp))
 
             FlowRow(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .widthIn(max = 500.dp)
+                    .fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(1.dp),
                 verticalArrangement = Arrangement.spacedBy(1.dp)
             ) {
@@ -168,7 +173,9 @@ fun AddEditAlarmScreen(
                 onValueChange = { label = it },
                 label = { Text("Alarm Label (Optional)") },
                 placeholder = { Text("e.g. Work, Gym, Medication") },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .widthIn(max = 500.dp)
+                    .fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp)
             )
 
@@ -180,7 +187,8 @@ fun AddEditAlarmScreen(
                 savedBarcodes = savedBarcodes,
                 onSelectBarcode = { newValue -> barcodeValue = newValue },
                 onScanBarcodeClick = onScanBarcodeClick,
-                onDeleteBarcode = onDeleteBarcode
+                onDeleteBarcode = onDeleteBarcode,
+                modifier = Modifier.widthIn(max = 500.dp)
             )
 
             Spacer(modifier = Modifier.height(32.dp))
@@ -203,6 +211,7 @@ fun AddEditAlarmScreen(
                     onSaveAlarm(alarmToSave)
                 },
                 modifier = Modifier
+                    .widthIn(max = 500.dp)
                     .fillMaxWidth()
                     .height(52.dp),
                 shape = RoundedCornerShape(12.dp)

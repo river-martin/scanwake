@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
@@ -282,7 +283,9 @@ fun FailsafeTypingScreen(
 
             // Target phrase reference box
             Surface(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .widthIn(max = 500.dp)
+                    .fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 color = MaterialTheme.colorScheme.surfaceVariant
             ) {
@@ -315,7 +318,9 @@ fun FailsafeTypingScreen(
                 },
                 label = { Text("Type the phrase here...") },
                 placeholder = { Text("I am awake and I cannot scan my barcode right now.") },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .widthIn(max = 500.dp)
+                    .fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp)
             )
 
@@ -331,7 +336,9 @@ fun FailsafeTypingScreen(
 
             Button(
                 onClick = onCancel,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .widthIn(max = 500.dp)
+                    .fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Text("Back to Barcode Scanner")

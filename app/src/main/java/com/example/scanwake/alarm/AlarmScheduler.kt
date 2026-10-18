@@ -13,7 +13,9 @@ class AlarmScheduler(private val context: Context) {
     private val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
     fun schedule(alarm: Alarm) {
-        if (!alarm.isEnabled) return
+        if (!alarm.isEnabled) {
+            return
+        }
 
         val triggerTimeMillis = calculateNextTriggerTime(alarm)
         val intent = Intent(context, AlarmReceiver::class.java).apply {

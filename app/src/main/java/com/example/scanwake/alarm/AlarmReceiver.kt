@@ -58,10 +58,12 @@ class AlarmReceiver : BroadcastReceiver() {
                     if (alarm.daysOfWeek.isBlank()) {
                         // One-time alarm triggered -> disable
                         repo.updateAlarm(alarm.copy(isEnabled = false))
+                        BootAlarmStorage.remove(context, alarmId)
                     } else {
                         // Repeating alarm -> schedule next recurrence
                         val scheduler = AlarmScheduler(context)
                         scheduler.schedule(alarm)
+                        BootAlarmStorage.save(context, alarm)
                     }
                 }
             }

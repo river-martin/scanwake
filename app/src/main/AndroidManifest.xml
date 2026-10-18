@@ -67,7 +67,8 @@
         <!-- Boot Receiver for rescheduling alarms on reboot -->
         <receiver
             android:name=".alarm.BootReceiver"
-            android:exported="true">
+            android:exported="true"
+            android:directBootAware="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
