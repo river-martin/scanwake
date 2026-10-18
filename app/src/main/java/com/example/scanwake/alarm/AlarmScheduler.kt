@@ -49,8 +49,13 @@ class AlarmScheduler(private val context: Context) {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        val alarmClockInfo = AlarmManager.AlarmClockInfo(triggerTimeMillis, showPendingIntent)
-        alarmManager.setAlarmClock(alarmClockInfo, pendingIntent)
+        try {
+            val alarmClockInfo = AlarmManager.AlarmClockInfo(triggerTimeMillis, showPendingIntent)
+            alarmManager.setAlarmClock(alarmClockInfo, pendingIntent)
+            android.util.Log.d("ScanWakeBoot", "Successfully scheduled alarm ID ${alarm.id} for trigger time $triggerTimeMillis")
+        } catch (e: Exception) {
+            android.util.Log.e("ScanWakeBoot", "Failed to schedule alarm ID ${alarm.id}", e)
+        }
     }
 
     fun cancel(alarm: Alarm) {
