@@ -7,13 +7,13 @@ plugins {
 }
 
 extensions.configure<ApplicationExtension> {
-    namespace = "com.example.scanwake"
+    namespace = "io.github.river_martin.scanwake"
     compileSdk {
         version = release(37)
     }
 
     defaultConfig {
-        applicationId = "com.example.scanwake"
+        applicationId = "io.github.river_martin.scanwake"
         minSdk = 26
         targetSdk = 37
         versionCode = 1

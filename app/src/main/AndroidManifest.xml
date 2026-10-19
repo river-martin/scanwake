@@ -78,7 +78,7 @@
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
                 <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED" />
-                <action android:name="com.example.scanwake.TEST_BOOT" />
+                <action android:name="io.github.river_martin.scanwake.TEST_BOOT" />
             </intent-filter>
         </receiver>
 

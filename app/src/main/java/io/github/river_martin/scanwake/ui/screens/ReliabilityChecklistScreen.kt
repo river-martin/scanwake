@@ -1,0 +1,446 @@
+package io.github.river_martin.scanwake.ui.screens
+
+import android.Manifest
+import android.os.Build
+import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.OpenInNew
+import androidx.compose.material.icons.filled.Alarm
+import androidx.compose.material.icons.filled.BatteryChargingFull
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.QrCodeScanner
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import io.github.river_martin.scanwake.util.ReliabilityUtils
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ReliabilityChecklistScreen(
+    onContinueClick: () -> Unit,
+    onBackClick: (() -> Unit)? = null
+) {
+    val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    if (onBackClick != null) {
+        BackHandler {
+            onBackClick()
+        }
+    }
+
+    var cameraGranted by remember { mutableStateOf(_root_ide_package_.io.github.river_martin.scanwake.util.ReliabilityUtils.isCameraGranted(context)) }
+    var notificationGranted by remember { mutableStateOf(_root_ide_package_.io.github.river_martin.scanwake.util.ReliabilityUtils.isNotificationGranted(context)) }
+    var exactAlarmGranted by remember { mutableStateOf(_root_ide_package_.io.github.river_martin.scanwake.util.ReliabilityUtils.isExactAlarmGranted(context)) }
+    var batteryOptimizationIgnored by remember { mutableStateOf(_root_ide_package_.io.github.river_martin.scanwake.util.ReliabilityUtils.isBatteryOptimizationIgnored(context)) }
+
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { _ ->
+        cameraGranted = _root_ide_package_.io.github.river_martin.scanwake.util.ReliabilityUtils.isCameraGranted(context)
+    }
+
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { _ ->
+        notificationGranted = _root_ide_package_.io.github.river_martin.scanwake.util.ReliabilityUtils.isNotificationGranted(context)
+    }
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                cameraGranted = _root_ide_package_.io.github.river_martin.scanwake.util.ReliabilityUtils.isCameraGranted(context)
+                notificationGranted = _root_ide_package_.io.github.river_martin.scanwake.util.ReliabilityUtils.isNotificationGranted(context)
+                exactAlarmGranted = _root_ide_package_.io.github.river_martin.scanwake.util.ReliabilityUtils.isExactAlarmGranted(context)
+                batteryOptimizationIgnored = _root_ide_package_.io.github.river_martin.scanwake.util.ReliabilityUtils.isBatteryOptimizationIgnored(context)
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        text = "Alarm Reliability Checklist",
+                        fontWeight = FontWeight.Bold
+                    )
+                },
+                navigationIcon = if (onBackClick != null) {
+                    {
+                        androidx.compose.material3.IconButton(onClick = onBackClick) {
+                            androidx.compose.material3.Icon(
+                                imageVector = androidx.compose.material.icons.Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back"
+                            )
+                        }
+                    }
+                } else {
+                    { }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            )
+        },
+        bottomBar = {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Button(
+                    onClick = onContinueClick,
+                    modifier = Modifier
+                        .widthIn(max = 500.dp)
+                        .fillMaxWidth()
+                        .height(52.dp),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text(
+                        text = "Continue to Alarms",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        }
+    ) { paddingValues ->
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                top = paddingValues.calculateTopPadding() + 16.dp,
+                bottom = paddingValues.calculateBottomPadding() + 16.dp,
+                start = 16.dp,
+                end = 16.dp
+            ),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            item {
+                Column(
+                    modifier = Modifier
+                        .widthIn(max = 500.dp)
+                        .fillMaxWidth()
+                ) {
+                    Text(
+                        text = "Ensure 100% Alarm Reliability",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "To guarantee your alarms always ring on time and won't be suppressed by Doze mode or device manufacturers, please complete the checks below.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                }
+            }
+
+            // 1. Exact Alarms
+            item {
+                ReliabilityCard(
+                    icon = Icons.Default.Alarm,
+                    title = "Exact Alarms Permission",
+                    description = "Required to trigger alarms at the precise minute without Doze mode delays.",
+                    isGranted = exactAlarmGranted,
+                    actionText = "Open Settings",
+                    onActionClick = { _root_ide_package_.io.github.river_martin.scanwake.util.ReliabilityUtils.openExactAlarmSettings(context) },
+                    modifier = Modifier
+                        .widthIn(max = 500.dp)
+                        .fillMaxWidth()
+                )
+            }
+
+            // 2. Notifications
+            item {
+                ReliabilityCard(
+                    icon = Icons.Default.Notifications,
+                    title = "Notification Permission",
+                    description = "Required to show high-priority alarm alerts and foreground audio service.",
+                    isGranted = notificationGranted,
+                    actionText = "Grant Permission",
+                    onActionClick = {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                        } else {
+                            _root_ide_package_.io.github.river_martin.scanwake.util.ReliabilityUtils.openNotificationSettings(context)
+                        }
+                    },
+                    modifier = Modifier
+                        .widthIn(max = 500.dp)
+                        .fillMaxWidth()
+                )
+            }
+
+            // 3. Camera
+            item {
+                ReliabilityCard(
+                    icon = Icons.Default.QrCodeScanner,
+                    title = "Camera Permission",
+                    description = "Required for scanning barcodes to dismiss your morning alarms.",
+                    isGranted = cameraGranted,
+                    actionText = "Grant Camera",
+                    onActionClick = {
+                        cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                    },
+                    modifier = Modifier
+                        .widthIn(max = 500.dp)
+                        .fillMaxWidth()
+                )
+            }
+
+            // 4. Battery Optimization
+            item {
+                ReliabilityCard(
+                    icon = Icons.Default.BatteryChargingFull,
+                    title = "Ignore Battery Optimizations",
+                    description = "Prevents Android from killing the background alarm worker and media playback.",
+                    isGranted = batteryOptimizationIgnored,
+                    actionText = "Disable Optimization",
+                    onActionClick = { _root_ide_package_.io.github.river_martin.scanwake.util.ReliabilityUtils.openBatteryOptimizationSettings(context) },
+                    modifier = Modifier
+                        .widthIn(max = 500.dp)
+                        .fillMaxWidth()
+                )
+            }
+
+            // 5. OEM / Don't Kill My App
+            item {
+                OemReliabilityCard(
+                    onOpenGuideClick = { _root_ide_package_.io.github.river_martin.scanwake.util.ReliabilityUtils.openDontKillMyApp(context) },
+                    modifier = Modifier
+                        .widthIn(max = 500.dp)
+                        .fillMaxWidth()
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun ReliabilityCard(
+    icon: ImageVector,
+    title: String,
+    description: String,
+    isGranted: Boolean,
+    actionText: String,
+    onActionClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier,
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(
+                                if (isGranted) Color(0xFF4CAF50).copy(alpha = 0.2f)
+                                else MaterialTheme.colorScheme.error.copy(alpha = 0.2f)
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = null,
+                            tint = if (isGranted) Color(0xFF2E7D32) else MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column {
+                        Text(
+                            text = title,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = if (isGranted) Icons.Default.CheckCircle else Icons.Default.Warning,
+                                contentDescription = null,
+                                tint = if (isGranted) Color(0xFF2E7D32) else MaterialTheme.colorScheme.error,
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = if (isGranted) "Enabled / Granted" else "Action Required",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = if (isGranted) Color(0xFF2E7D32) else MaterialTheme.colorScheme.error
+                            )
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = description,
+                fontSize = 13.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            if (!isGranted) {
+                Spacer(modifier = Modifier.height(12.dp))
+                OutlinedButton(
+                    onClick = onActionClick,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(text = actionText, fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun OemReliabilityCard(
+    onOpenGuideClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier,
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Info,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(22.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(12.dp))
+                Column {
+                    Text(
+                        text = "OEM Background Restrictions",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = "Samsung, Xiaomi, Huawei, OnePlus, etc.",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "Some phone manufacturers aggressive task killers may block background alarms. Check Don't Kill My App to configure your device brand's settings.",
+                fontSize = 13.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+            OutlinedButton(
+                onClick = onOpenGuideClick,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.OpenInNew,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(text = "Open dontkillmyapp.com Guide", fontWeight = FontWeight.Bold)
+            }
+        }
+    }
+}
