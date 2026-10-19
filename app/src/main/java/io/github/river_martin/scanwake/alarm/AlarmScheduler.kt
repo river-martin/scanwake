@@ -5,6 +5,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import io.github.river_martin.scanwake.MainActivity
 import io.github.river_martin.scanwake.data.model.Alarm
 import java.util.Calendar
 
@@ -12,7 +13,7 @@ class AlarmScheduler(private val context: Context) {
 
     private val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
-    fun schedule(alarm: io.github.river_martin.scanwake.data.model.Alarm) {
+    fun schedule(alarm: Alarm) {
         if (!alarm.isEnabled) {
             return
         }
@@ -42,7 +43,7 @@ class AlarmScheduler(private val context: Context) {
         }
 
         // Show intent for when user taps alarm icon in status bar
-        val showIntent = Intent(context, _root_ide_package_.io.github.river_martin.scanwake.MainActivity::class.java)
+        val showIntent = Intent(context, MainActivity::class.java)
         val showPendingIntent = PendingIntent.getActivity(
             context,
             alarm.id.toInt(),
@@ -59,7 +60,7 @@ class AlarmScheduler(private val context: Context) {
         }
     }
 
-    fun cancel(alarm: io.github.river_martin.scanwake.data.model.Alarm) {
+    fun cancel(alarm: Alarm) {
         val intent = Intent(context, AlarmReceiver::class.java)
         val pendingIntent = PendingIntent.getBroadcast(
             context,
@@ -81,7 +82,7 @@ class AlarmScheduler(private val context: Context) {
         const val EXTRA_VIBRATE = "extra_vibrate"
         const val EXTRA_BARCODE_LABEL = "extra_barcode_label"
 
-        fun calculateNextTriggerTime(alarm: io.github.river_martin.scanwake.data.model.Alarm): Long {
+        fun calculateNextTriggerTime(alarm: Alarm): Long {
             val now = Calendar.getInstance()
             val target = Calendar.getInstance().apply {
                 set(Calendar.HOUR_OF_DAY, alarm.hour)

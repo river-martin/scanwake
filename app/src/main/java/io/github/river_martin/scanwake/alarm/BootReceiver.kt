@@ -11,14 +11,13 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.util.Calendar
 
-class BootReceiver : android.content.BroadcastReceiver() {
+class BootReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
         android.util.Log.d("ScanWakeBoot", "BootReceiver onReceive triggered with action: ${intent.action}")
         if (intent.action == Intent.ACTION_BOOT_COMPLETED ||
             intent.action == Intent.ACTION_LOCKED_BOOT_COMPLETED ||
             intent.action == Intent.ACTION_MY_PACKAGE_REPLACED ||
-            intent.action == "android.intent.action.LOCKED_BOOT_COMPLETED" ||
             intent.action == "io.github.river_martin.scanwake.TEST_BOOT"
         ) {
             val pendingResult = goAsync()
@@ -29,9 +28,9 @@ class BootReceiver : android.content.BroadcastReceiver() {
                         try {
                             val pendingIds = BootAlarmStorage.getAndClearPendingDisables(context)
                             if (pendingIds.isNotEmpty()) {
-                                val db = _root_ide_package_.io.github.river_martin.scanwake.data.local.ScanWakeDatabase.Companion.getDatabase(context)
+                                val db = ScanWakeDatabase.getDatabase(context)
                                 val repo =
-                                    _root_ide_package_.io.github.river_martin.scanwake.data.repository.AlarmRepository(
+                                    AlarmRepository(
                                         db.alarmDao(),
                                         db.savedBarcodeDao()
                                     )
@@ -83,7 +82,7 @@ class BootReceiver : android.content.BroadcastReceiver() {
                                 } else {
                                     android.util.Log.d("ScanWakeBoot", "Rescheduling alarm ID $alarmId for $hour:$minute (Barcode Label: $barcodeLabel)")
                                     val alarm =
-                                        _root_ide_package_.io.github.river_martin.scanwake.data.model.Alarm(
+                                        Alarm(
                                             id = alarmId,
                                             hour = hour,
                                             minute = minute,

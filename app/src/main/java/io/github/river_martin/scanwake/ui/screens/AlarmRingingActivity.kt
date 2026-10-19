@@ -57,11 +57,11 @@ class AlarmRingingActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        alarmId = intent.getLongExtra(_root_ide_package_.io.github.river_martin.scanwake.alarm.AlarmScheduler.Companion.EXTRA_ALARM_ID, -1L)
-        alarmLabel = intent.getStringExtra(_root_ide_package_.io.github.river_martin.scanwake.alarm.AlarmScheduler.Companion.EXTRA_ALARM_LABEL) ?: ""
-        requiredBarcode = intent.getStringExtra(_root_ide_package_.io.github.river_martin.scanwake.alarm.AlarmScheduler.Companion.EXTRA_BARCODE_VALUE) ?: ""
-        ringtoneUri = intent.getStringExtra(_root_ide_package_.io.github.river_martin.scanwake.alarm.AlarmScheduler.Companion.EXTRA_RINGTONE_URI) ?: ""
-        vibrate = intent.getBooleanExtra(_root_ide_package_.io.github.river_martin.scanwake.alarm.AlarmScheduler.Companion.EXTRA_VIBRATE, true)
+        alarmId = intent.getLongExtra(AlarmScheduler.EXTRA_ALARM_ID, -1L)
+        alarmLabel = intent.getStringExtra(AlarmScheduler.EXTRA_ALARM_LABEL) ?: ""
+        requiredBarcode = intent.getStringExtra(AlarmScheduler.EXTRA_BARCODE_VALUE) ?: ""
+        ringtoneUri = intent.getStringExtra(AlarmScheduler.EXTRA_RINGTONE_URI) ?: ""
+        vibrate = intent.getBooleanExtra(AlarmScheduler.EXTRA_VIBRATE, true)
 
         // Prevent exiting alarm ringing screen via Back Button or Back Gesture
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
@@ -88,13 +88,13 @@ class AlarmRingingActivity : ComponentActivity() {
         }
 
         setContent {
-            _root_ide_package_.io.github.river_martin.scanwake.ui.theme.ScanWakeTheme {
+            ScanWakeTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
                     val initialBarcodeLabel =
-                        intent.getStringExtra(_root_ide_package_.io.github.river_martin.scanwake.alarm.AlarmScheduler.Companion.EXTRA_BARCODE_LABEL)
+                        intent.getStringExtra(AlarmScheduler.EXTRA_BARCODE_LABEL)
                             ?: ""
                     val barcodeLabel = initialBarcodeLabel.ifBlank { null }
 
@@ -112,7 +112,7 @@ class AlarmRingingActivity : ComponentActivity() {
                     if (isFailsafeActive) {
                         FailsafeTypingScreen(
                             onDismissAlarm = {
-                                _root_ide_package_.io.github.river_martin.scanwake.alarm.AlarmService.Companion.stopService(
+                                AlarmService.stopService(
                                     this@AlarmRingingActivity
                                 )
                                 Toast.makeText(
@@ -127,7 +127,7 @@ class AlarmRingingActivity : ComponentActivity() {
                                 isFailsafeActive = false
                             },
                             onUserTyping = {
-                                _root_ide_package_.io.github.river_martin.scanwake.alarm.AlarmService.Companion.stopService(
+                                AlarmService.stopService(
                                     this@AlarmRingingActivity
                                 )
                             },
@@ -160,7 +160,7 @@ class AlarmRingingActivity : ComponentActivity() {
 
                                     if (isValid) {
                                         // Correct barcode scanned -> stop alarm service and finish
-                                        _root_ide_package_.io.github.river_martin.scanwake.alarm.AlarmService.Companion.stopService(
+                                        AlarmService.stopService(
                                             this@AlarmRingingActivity
                                         )
                                         Toast.makeText(
@@ -174,7 +174,7 @@ class AlarmRingingActivity : ComponentActivity() {
                                     }
                                 },
                                 onFailsafeClick = {
-                                    _root_ide_package_.io.github.river_martin.scanwake.alarm.AlarmService.Companion.stopService(
+                                    AlarmService.stopService(
                                         this@AlarmRingingActivity
                                     )
                                     isFailsafeActive = true
@@ -224,12 +224,12 @@ class AlarmRingingActivity : ComponentActivity() {
     }
 
     private fun startAlarmService() {
-        val serviceIntent = Intent(this, _root_ide_package_.io.github.river_martin.scanwake.alarm.AlarmService::class.java).apply {
-            putExtra(_root_ide_package_.io.github.river_martin.scanwake.alarm.AlarmScheduler.Companion.EXTRA_ALARM_ID, alarmId)
-            putExtra(_root_ide_package_.io.github.river_martin.scanwake.alarm.AlarmScheduler.Companion.EXTRA_ALARM_LABEL, alarmLabel)
-            putExtra(_root_ide_package_.io.github.river_martin.scanwake.alarm.AlarmScheduler.Companion.EXTRA_BARCODE_VALUE, requiredBarcode)
-            putExtra(_root_ide_package_.io.github.river_martin.scanwake.alarm.AlarmScheduler.Companion.EXTRA_RINGTONE_URI, ringtoneUri)
-            putExtra(_root_ide_package_.io.github.river_martin.scanwake.alarm.AlarmScheduler.Companion.EXTRA_VIBRATE, vibrate)
+        val serviceIntent = Intent(this, AlarmService::class.java).apply {
+            putExtra(AlarmScheduler.EXTRA_ALARM_ID, alarmId)
+            putExtra(AlarmScheduler.EXTRA_ALARM_LABEL, alarmLabel)
+            putExtra(AlarmScheduler.EXTRA_BARCODE_VALUE, requiredBarcode)
+            putExtra(AlarmScheduler.EXTRA_RINGTONE_URI, ringtoneUri)
+            putExtra(AlarmScheduler.EXTRA_VIBRATE, vibrate)
         }
         startForegroundService(serviceIntent)
     }

@@ -3,7 +3,6 @@ package io.github.river_martin.scanwake.alarm
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.os.Build
 import io.github.river_martin.scanwake.data.local.ScanWakeDatabase
 import io.github.river_martin.scanwake.data.repository.AlarmRepository
 import io.github.river_martin.scanwake.ui.screens.AlarmRingingActivity
@@ -11,7 +10,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-class AlarmReceiver : android.content.BroadcastReceiver() {
+class AlarmReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
         val alarmId = intent.getLongExtra(AlarmScheduler.EXTRA_ALARM_ID, -1L)
@@ -31,14 +30,10 @@ class AlarmReceiver : android.content.BroadcastReceiver() {
             putExtra(AlarmScheduler.EXTRA_BARCODE_LABEL, barcodeLabel)
         }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            context.startForegroundService(serviceIntent)
-        } else {
-            context.startService(serviceIntent)
-        }
+        context.startForegroundService(serviceIntent)
 
         // 2. Launch Full Screen Alarm Ringing Activity (over lock screen)
-        val activityIntent = Intent(context, _root_ide_package_.io.github.river_martin.scanwake.ui.screens.AlarmRingingActivity::class.java).apply {
+        val activityIntent = Intent(context, AlarmRingingActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or
                     Intent.FLAG_ACTIVITY_CLEAR_TOP or
                     Intent.FLAG_ACTIVITY_SINGLE_TOP
@@ -59,9 +54,9 @@ class AlarmReceiver : android.content.BroadcastReceiver() {
                 try {
                     val userManager = context.getSystemService(Context.USER_SERVICE) as android.os.UserManager
                     if (userManager.isUserUnlocked) {
-                        val db = _root_ide_package_.io.github.river_martin.scanwake.data.local.ScanWakeDatabase.Companion.getDatabase(context)
+                        val db = ScanWakeDatabase.getDatabase(context)
                         val repo =
-                            _root_ide_package_.io.github.river_martin.scanwake.data.repository.AlarmRepository(
+                            AlarmRepository(
                                 db.alarmDao(),
                                 db.savedBarcodeDao()
                             )

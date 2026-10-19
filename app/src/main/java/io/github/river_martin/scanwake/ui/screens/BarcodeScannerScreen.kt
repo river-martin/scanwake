@@ -124,7 +124,7 @@ fun BarcodeScannerScreen(
 
                         imageAnalysis.setAnalyzer(
                             executor,
-                            _root_ide_package_.io.github.river_martin.scanwake.scanner.BarcodeAnalyzer { barcodeText ->
+                            BarcodeAnalyzer { barcodeText ->
                                 ContextCompat.getMainExecutor(ctx).execute {
                                     if (onSaveAndUseBarcode != null) {
                                         if (scannedCodeHolder == null) {

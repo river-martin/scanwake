@@ -10,7 +10,7 @@ object BootAlarmStorage {
         return dpContext.getSharedPreferences("scanwake_dp_alarms", Context.MODE_PRIVATE)
     }
 
-    fun save(context: Context, alarm: io.github.river_martin.scanwake.data.model.Alarm) {
+    fun save(context: Context, alarm: Alarm) {
         if (!alarm.isEnabled) {
             remove(context, alarm.id)
             return

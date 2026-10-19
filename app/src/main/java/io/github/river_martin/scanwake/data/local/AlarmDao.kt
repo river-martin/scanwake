@@ -13,22 +13,22 @@ import kotlinx.coroutines.flow.Flow
 interface AlarmDao {
 
     @Query("SELECT * FROM alarms ORDER BY hour ASC, minute ASC")
-    fun getAllAlarms(): Flow<List<io.github.river_martin.scanwake.data.model.Alarm>>
+    fun getAllAlarms(): Flow<List<Alarm>>
 
     @Query("SELECT * FROM alarms WHERE id = :id")
-    suspend fun getAlarmById(id: Long): io.github.river_martin.scanwake.data.model.Alarm?
+    suspend fun getAlarmById(id: Long): Alarm?
 
     @Query("SELECT * FROM alarms WHERE isEnabled = 1")
-    suspend fun getEnabledAlarms(): List<io.github.river_martin.scanwake.data.model.Alarm>
+    suspend fun getEnabledAlarms(): List<Alarm>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertAlarm(alarm: io.github.river_martin.scanwake.data.model.Alarm): Long
+    suspend fun insertAlarm(alarm: Alarm): Long
 
     @Update
-    suspend fun updateAlarm(alarm: io.github.river_martin.scanwake.data.model.Alarm)
+    suspend fun updateAlarm(alarm: Alarm)
 
     @Delete
-    suspend fun deleteAlarm(alarm: io.github.river_martin.scanwake.data.model.Alarm)
+    suspend fun deleteAlarm(alarm: Alarm)
 
     @Query("DELETE FROM alarms WHERE id = :id")
     suspend fun deleteAlarmById(id: Long)

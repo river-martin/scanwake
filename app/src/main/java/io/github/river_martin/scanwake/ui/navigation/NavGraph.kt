@@ -26,6 +26,7 @@ import io.github.river_martin.scanwake.ui.screens.AddEditAlarmScreen
 import io.github.river_martin.scanwake.ui.screens.AlarmListScreen
 import io.github.river_martin.scanwake.ui.screens.BarcodeScannerScreen
 import io.github.river_martin.scanwake.ui.screens.NapAlarmScreen
+import io.github.river_martin.scanwake.ui.screens.ReliabilityChecklistScreen
 import kotlinx.coroutines.launch
 
 object NavRoutes {
@@ -50,15 +51,15 @@ fun ScanWakeNavGraph() {
     val isFirstLaunch = remember { prefs.getBoolean("is_first_launch", true) }
     val startDestination = if (isFirstLaunch) NavRoutes.RELIABILITY_CHECKLIST else NavRoutes.ALARM_LIST
 
-    val database = remember { _root_ide_package_.io.github.river_martin.scanwake.data.local.ScanWakeDatabase.Companion.getDatabase(context) }
+    val database = remember { ScanWakeDatabase.getDatabase(context) }
     val repository = remember {
-        _root_ide_package_.io.github.river_martin.scanwake.data.repository.AlarmRepository(
+        AlarmRepository(
             database.alarmDao(),
             database.savedBarcodeDao()
         )
     }
     val scheduler = remember {
-        _root_ide_package_.io.github.river_martin.scanwake.alarm.AlarmScheduler(
+        AlarmScheduler(
             context
         )
     }
@@ -79,7 +80,7 @@ fun ScanWakeNavGraph() {
     ) {
         // Reliability Checklist Screen (First Launch & Manual Inspection)
         composable(NavRoutes.RELIABILITY_CHECKLIST) {
-            _root_ide_package_.io.github.river_martin.scanwake.ui.screens.ReliabilityChecklistScreen(
+            ReliabilityChecklistScreen(
                 onContinueClick = {
                     prefs.edit().putBoolean("is_first_launch", false).apply()
                     navController.navigate(NavRoutes.ALARM_LIST) {
@@ -94,7 +95,7 @@ fun ScanWakeNavGraph() {
 
         // Alarm List Screen
         composable(NavRoutes.ALARM_LIST) {
-            _root_ide_package_.io.github.river_martin.scanwake.ui.screens.AlarmListScreen(
+            AlarmListScreen(
                 alarms = alarms,
                 savedBarcodes = savedBarcodes,
                 onReliabilityClick = {
@@ -118,13 +119,13 @@ fun ScanWakeNavGraph() {
                         repository.updateAlarm(updated)
                         if (isEnabled) {
                             scheduler.schedule(updated)
-                            _root_ide_package_.io.github.river_martin.scanwake.alarm.BootAlarmStorage.save(
+                            BootAlarmStorage.save(
                                 context,
                                 updated
                             )
                         } else {
                             scheduler.cancel(updated)
-                            _root_ide_package_.io.github.river_martin.scanwake.alarm.BootAlarmStorage.remove(
+                            BootAlarmStorage.remove(
                                 context,
                                 updated.id
                             )
@@ -134,7 +135,7 @@ fun ScanWakeNavGraph() {
                 onDeleteAlarm = { alarm ->
                     scope.launch {
                         scheduler.cancel(alarm)
-                        _root_ide_package_.io.github.river_martin.scanwake.alarm.BootAlarmStorage.remove(
+                        BootAlarmStorage.remove(
                             context,
                             alarm.id
                         )
@@ -144,17 +145,17 @@ fun ScanWakeNavGraph() {
             )
         }
 
-        val saveAndScheduleAlarm: (io.github.river_martin.scanwake.data.model.Alarm) -> Unit = { alarmToSave ->
+        val saveAndScheduleAlarm: (Alarm) -> Unit = { alarmToSave ->
             scope.launch {
                 if (alarmToSave.id == 0L) {
                     val newId = repository.insertAlarm(alarmToSave)
                     val newAlarm = alarmToSave.copy(id = newId)
                     scheduler.schedule(newAlarm)
-                    _root_ide_package_.io.github.river_martin.scanwake.alarm.BootAlarmStorage.save(context, newAlarm)
+                    BootAlarmStorage.save(context, newAlarm)
                 } else {
                     repository.updateAlarm(alarmToSave)
                     scheduler.schedule(alarmToSave)
-                    _root_ide_package_.io.github.river_martin.scanwake.alarm.BootAlarmStorage.save(context, alarmToSave)
+                    BootAlarmStorage.save(context, alarmToSave)
                 }
                 tempScannedBarcode = null
                 navController.popBackStack()
@@ -189,7 +190,7 @@ fun ScanWakeNavGraph() {
             val initialAlarm = alarms.find { it.id == alarmId }
 
 
-            _root_ide_package_.io.github.river_martin.scanwake.ui.screens.AddEditAlarmScreen(
+            AddEditAlarmScreen(
                 initialAlarm = initialAlarm,
                 savedBarcodes = savedBarcodes,
                 scannedBarcode = tempScannedBarcode,
@@ -202,7 +203,7 @@ fun ScanWakeNavGraph() {
 
         // Dedicated Nap Alarm Screen
         composable(NavRoutes.NAP_ALARM) {
-            _root_ide_package_.io.github.river_martin.scanwake.ui.screens.NapAlarmScreen(
+            NapAlarmScreen(
                 savedBarcodes = savedBarcodes,
                 scannedBarcode = tempScannedBarcode,
                 onScanBarcodeClick = openBarcodeScanner,
@@ -214,7 +215,7 @@ fun ScanWakeNavGraph() {
 
         // Barcode Scanner Screen
         composable(NavRoutes.BARCODE_SCANNER) {
-            _root_ide_package_.io.github.river_martin.scanwake.ui.screens.BarcodeScannerScreen(
+            BarcodeScannerScreen(
                 titleText = "Scan Alarm Barcode",
                 instructionText = "Scan barcode on any item to set as alarm dismissal key",
                 onBarcodeScanned = { scannedCode ->

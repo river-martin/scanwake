@@ -5,7 +5,6 @@ import androidx.room3.Database
 import androidx.room3.Room
 import androidx.room3.RoomDatabase
 import io.github.river_martin.scanwake.data.model.Alarm
-import io.github.river_martin.scanwake.data.model.Alarm
 import io.github.river_martin.scanwake.data.model.SavedBarcode
 
 @Database(entities = [Alarm::class, SavedBarcode::class], version = 3, exportSchema = false)

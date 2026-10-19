@@ -77,30 +77,30 @@ fun ReliabilityChecklistScreen(
         }
     }
 
-    var cameraGranted by remember { mutableStateOf(_root_ide_package_.io.github.river_martin.scanwake.util.ReliabilityUtils.isCameraGranted(context)) }
-    var notificationGranted by remember { mutableStateOf(_root_ide_package_.io.github.river_martin.scanwake.util.ReliabilityUtils.isNotificationGranted(context)) }
-    var exactAlarmGranted by remember { mutableStateOf(_root_ide_package_.io.github.river_martin.scanwake.util.ReliabilityUtils.isExactAlarmGranted(context)) }
-    var batteryOptimizationIgnored by remember { mutableStateOf(_root_ide_package_.io.github.river_martin.scanwake.util.ReliabilityUtils.isBatteryOptimizationIgnored(context)) }
+    var cameraGranted by remember { mutableStateOf(ReliabilityUtils.isCameraGranted(context)) }
+    var notificationGranted by remember { mutableStateOf(ReliabilityUtils.isNotificationGranted(context)) }
+    var exactAlarmGranted by remember { mutableStateOf(ReliabilityUtils.isExactAlarmGranted(context)) }
+    var batteryOptimizationIgnored by remember { mutableStateOf(ReliabilityUtils.isBatteryOptimizationIgnored(context)) }
 
     val cameraPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { _ ->
-        cameraGranted = _root_ide_package_.io.github.river_martin.scanwake.util.ReliabilityUtils.isCameraGranted(context)
+        cameraGranted = ReliabilityUtils.isCameraGranted(context)
     }
 
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { _ ->
-        notificationGranted = _root_ide_package_.io.github.river_martin.scanwake.util.ReliabilityUtils.isNotificationGranted(context)
+        notificationGranted = ReliabilityUtils.isNotificationGranted(context)
     }
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
-                cameraGranted = _root_ide_package_.io.github.river_martin.scanwake.util.ReliabilityUtils.isCameraGranted(context)
-                notificationGranted = _root_ide_package_.io.github.river_martin.scanwake.util.ReliabilityUtils.isNotificationGranted(context)
-                exactAlarmGranted = _root_ide_package_.io.github.river_martin.scanwake.util.ReliabilityUtils.isExactAlarmGranted(context)
-                batteryOptimizationIgnored = _root_ide_package_.io.github.river_martin.scanwake.util.ReliabilityUtils.isBatteryOptimizationIgnored(context)
+                cameraGranted = ReliabilityUtils.isCameraGranted(context)
+                notificationGranted = ReliabilityUtils.isNotificationGranted(context)
+                exactAlarmGranted = ReliabilityUtils.isExactAlarmGranted(context)
+                batteryOptimizationIgnored = ReliabilityUtils.isBatteryOptimizationIgnored(context)
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -121,8 +121,8 @@ fun ReliabilityChecklistScreen(
                 navigationIcon = if (onBackClick != null) {
                     {
                         androidx.compose.material3.IconButton(onClick = onBackClick) {
-                            androidx.compose.material3.Icon(
-                                imageVector = androidx.compose.material.icons.Icons.AutoMirrored.Filled.ArrowBack,
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "Back"
                             )
                         }
@@ -201,7 +201,7 @@ fun ReliabilityChecklistScreen(
                     description = "Required to trigger alarms at the precise minute without Doze mode delays.",
                     isGranted = exactAlarmGranted,
                     actionText = "Open Settings",
-                    onActionClick = { _root_ide_package_.io.github.river_martin.scanwake.util.ReliabilityUtils.openExactAlarmSettings(context) },
+                    onActionClick = { ReliabilityUtils.openExactAlarmSettings(context) },
                     modifier = Modifier
                         .widthIn(max = 500.dp)
                         .fillMaxWidth()
@@ -220,7 +220,7 @@ fun ReliabilityChecklistScreen(
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                             notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                         } else {
-                            _root_ide_package_.io.github.river_martin.scanwake.util.ReliabilityUtils.openNotificationSettings(context)
+                            ReliabilityUtils.openNotificationSettings(context)
                         }
                     },
                     modifier = Modifier
@@ -254,7 +254,7 @@ fun ReliabilityChecklistScreen(
                     description = "Prevents Android from killing the background alarm worker and media playback.",
                     isGranted = batteryOptimizationIgnored,
                     actionText = "Disable Optimization",
-                    onActionClick = { _root_ide_package_.io.github.river_martin.scanwake.util.ReliabilityUtils.openBatteryOptimizationSettings(context) },
+                    onActionClick = { ReliabilityUtils.openBatteryOptimizationSettings(context) },
                     modifier = Modifier
                         .widthIn(max = 500.dp)
                         .fillMaxWidth()
@@ -264,7 +264,7 @@ fun ReliabilityChecklistScreen(
             // 5. OEM / Don't Kill My App
             item {
                 OemReliabilityCard(
-                    onOpenGuideClick = { _root_ide_package_.io.github.river_martin.scanwake.util.ReliabilityUtils.openDontKillMyApp(context) },
+                    onOpenGuideClick = { ReliabilityUtils.openDontKillMyApp(context) },
                     modifier = Modifier
                         .widthIn(max = 500.dp)
                         .fillMaxWidth()

@@ -18,12 +18,12 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         setContent {
-            _root_ide_package_.io.github.river_martin.scanwake.ui.theme.ScanWakeTheme {
+            ScanWakeTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    _root_ide_package_.io.github.river_martin.scanwake.ui.navigation.ScanWakeNavGraph()
+                    ScanWakeNavGraph()
                 }
             }
         }

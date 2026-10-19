@@ -52,11 +52,11 @@ import java.util.Calendar
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun AddEditAlarmScreen(
-    initialAlarm: io.github.river_martin.scanwake.data.model.Alarm? = null,
+    initialAlarm: Alarm? = null,
     savedBarcodes: List<SavedBarcode> = emptyList(),
     scannedBarcode: String? = null,
     onScanBarcodeClick: () -> Unit,
-    onSaveAlarm: (io.github.river_martin.scanwake.data.model.Alarm) -> Unit,
+    onSaveAlarm: (Alarm) -> Unit,
     onDeleteBarcode: (SavedBarcode) -> Unit,
     onBackClick: () -> Unit
 ) {
@@ -182,7 +182,7 @@ fun AddEditAlarmScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             // Barcode Assignment Card
-            _root_ide_package_.io.github.river_martin.scanwake.ui.components.BarcodeAssignmentCard(
+            BarcodeAssignmentCard(
                 barcodeValue = barcodeValue,
                 savedBarcodes = savedBarcodes,
                 onSelectBarcode = { newValue -> barcodeValue = newValue },
@@ -199,7 +199,7 @@ fun AddEditAlarmScreen(
                     val daysOfWeekString = selectedDays.joinToString(",")
                     val matchedBarcode = savedBarcodes.find { it.barcodeValue == barcodeValue }
                     val alarmToSave =
-                        _root_ide_package_.io.github.river_martin.scanwake.data.model.Alarm(
+                        Alarm(
                             id = initialAlarm?.id ?: 0,
                             hour = timePickerState.hour,
                             minute = timePickerState.minute,

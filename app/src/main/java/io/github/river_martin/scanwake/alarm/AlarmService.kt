@@ -20,7 +20,7 @@ import androidx.core.app.NotificationCompat
 import io.github.river_martin.scanwake.R
 import io.github.river_martin.scanwake.ui.screens.AlarmRingingActivity
 
-class AlarmService : android.app.Service() {
+class AlarmService : Service() {
 
     private var mediaPlayer: MediaPlayer? = null
     private var vibrator: Vibrator? = null
@@ -46,7 +46,7 @@ class AlarmService : android.app.Service() {
 
         createNotificationChannel()
 
-        val fullScreenIntent = Intent(this, _root_ide_package_.io.github.river_martin.scanwake.ui.screens.AlarmRingingActivity::class.java).apply {
+        val fullScreenIntent = Intent(this, AlarmRingingActivity::class.java).apply {
             putExtra(AlarmScheduler.EXTRA_ALARM_ID, currentAlarmId)
             putExtra(AlarmScheduler.EXTRA_ALARM_LABEL, currentAlarmLabel)
             putExtra(AlarmScheduler.EXTRA_BARCODE_VALUE, currentBarcodeValue)
@@ -86,7 +86,7 @@ class AlarmService : android.app.Service() {
         super.onTaskRemoved(rootIntent)
         // If alarm service is actively ringing when app is swiped away from Recents, re-launch AlarmRingingActivity immediately
         if (mediaPlayer?.isPlaying == true) {
-            val fullScreenIntent = Intent(this, _root_ide_package_.io.github.river_martin.scanwake.ui.screens.AlarmRingingActivity::class.java).apply {
+            val fullScreenIntent = Intent(this, AlarmRingingActivity::class.java).apply {
                 putExtra(AlarmScheduler.EXTRA_ALARM_ID, currentAlarmId)
                 putExtra(AlarmScheduler.EXTRA_ALARM_LABEL, currentAlarmLabel)
                 putExtra(AlarmScheduler.EXTRA_BARCODE_VALUE, currentBarcodeValue)
@@ -125,20 +125,15 @@ class AlarmService : android.app.Service() {
     private fun startVibration() {
         try {
             vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                val vibratorManager = getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
+                val vibratorManager = getSystemService(VIBRATOR_MANAGER_SERVICE) as VibratorManager
                 vibratorManager.defaultVibrator
             } else {
                 @Suppress("DEPRECATION")
-                getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+                getSystemService(VIBRATOR_SERVICE) as Vibrator
             }
 
             val pattern = longArrayOf(0, 500, 500)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                vibrator?.vibrate(VibrationEffect.createWaveform(pattern, 0))
-            } else {
-                @Suppress("DEPRECATION")
-                vibrator?.vibrate(pattern, 0)
-            }
+            vibrator?.vibrate(VibrationEffect.createWaveform(pattern, 0))
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -160,12 +155,7 @@ class AlarmService : android.app.Service() {
             e.printStackTrace()
         }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            stopForeground(STOP_FOREGROUND_REMOVE)
-        } else {
-            @Suppress("DEPRECATION")
-            stopForeground(true)
-        }
+        stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
     }
 
@@ -175,20 +165,18 @@ class AlarmService : android.app.Service() {
     }
 
     private fun createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                CHANNEL_ID,
-                "Alarm Channel",
-                NotificationManager.IMPORTANCE_HIGH
-            ).apply {
-                description = "Channel for ScanWake Alarm notifications"
-                setSound(null, null)
-                enableVibration(false)
-            }
-
-            val notificationManager = getSystemService(NotificationManager::class.java)
-            notificationManager?.createNotificationChannel(channel)
+        val channel = NotificationChannel(
+            CHANNEL_ID,
+            "Alarm Channel",
+            NotificationManager.IMPORTANCE_HIGH
+        ).apply {
+            description = "Channel for ScanWake Alarm notifications"
+            setSound(null, null)
+            enableVibration(false)
         }
+
+        val notificationManager = getSystemService(NotificationManager::class.java)
+        notificationManager?.createNotificationChannel(channel)
     }
 
     companion object {

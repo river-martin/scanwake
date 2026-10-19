@@ -61,7 +61,7 @@ fun NapAlarmScreen(
     savedBarcodes: List<SavedBarcode> = emptyList(),
     scannedBarcode: String? = null,
     onScanBarcodeClick: () -> Unit,
-    onSaveAlarm: (io.github.river_martin.scanwake.data.model.Alarm) -> Unit,
+    onSaveAlarm: (Alarm) -> Unit,
     onDeleteBarcode: (SavedBarcode) -> Unit,
     onBackClick: () -> Unit
 ) {
@@ -288,7 +288,7 @@ fun NapAlarmScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             // Barcode Assignment Card
-            _root_ide_package_.io.github.river_martin.scanwake.ui.components.BarcodeAssignmentCard(
+            BarcodeAssignmentCard(
                 barcodeValue = barcodeValue,
                 savedBarcodes = savedBarcodes,
                 onSelectBarcode = { newValue -> barcodeValue = newValue },
@@ -304,7 +304,7 @@ fun NapAlarmScreen(
                 onClick = {
                     val matchedBarcode = savedBarcodes.find { it.barcodeValue == barcodeValue }
                     val napAlarm =
-                        _root_ide_package_.io.github.river_martin.scanwake.data.model.Alarm(
+                        Alarm(
                             hour = targetHour,
                             minute = targetMinute,
                             daysOfWeek = "", // One-time nap alarm
