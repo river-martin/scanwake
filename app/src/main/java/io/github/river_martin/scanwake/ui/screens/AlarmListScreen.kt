@@ -54,14 +54,14 @@ import io.github.river_martin.scanwake.data.model.SavedBarcode
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AlarmListScreen(
-    alarms: List<io.github.river_martin.scanwake.data.model.Alarm>,
+    alarms: List<Alarm>,
     savedBarcodes: List<SavedBarcode> = emptyList(),
     onReliabilityClick: () -> Unit,
     onAddAlarmClick: () -> Unit,
     onAddNapAlarmClick: () -> Unit,
-    onEditAlarmClick: (io.github.river_martin.scanwake.data.model.Alarm) -> Unit,
-    onToggleAlarm: (io.github.river_martin.scanwake.data.model.Alarm, Boolean) -> Unit,
-    onDeleteAlarm: (io.github.river_martin.scanwake.data.model.Alarm) -> Unit
+    onEditAlarmClick: (Alarm) -> Unit,
+    onToggleAlarm: (Alarm, Boolean) -> Unit,
+    onDeleteAlarm: (Alarm) -> Unit
 ) {
     var isFabMenuExpanded by remember { mutableStateOf(false) }
 
