@@ -362,7 +362,7 @@ fun BarcodeScannerScreen(
     }
 }
 
-@Preview(name = "Foldable Folded", device = "spec:width=380dp,height=800dp,dpi=420", showBackground = true)
+@Preview(name = "Z Fold 8 Ultra Folded", device = "spec:width=411dp,height=960dp,dpi=420", showBackground = true)
 @Composable
 fun BarcodeScannerScreenFoldedPreview() {
     ScanWakeTheme {
@@ -372,7 +372,7 @@ fun BarcodeScannerScreenFoldedPreview() {
     }
 }
 
-@Preview(name = "Foldable Unfolded", device = "spec:width=673dp,height=841dp,dpi=420", showBackground = true)
+@Preview(name = "Z Fold 8 Ultra Unfolded", device = "spec:width=860dp,height=954dp,dpi=420", showBackground = true)
 @Composable
 fun BarcodeScannerScreenUnfoldedPreview() {
     ScanWakeTheme {
