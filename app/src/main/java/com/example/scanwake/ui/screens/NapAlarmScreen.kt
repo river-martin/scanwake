@@ -302,13 +302,15 @@ fun NapAlarmScreen(
             // Save Nap Alarm Button
             Button(
                 onClick = {
+                    val matchedBarcode = savedBarcodes.find { it.barcodeValue == barcodeValue }
                     val napAlarm = Alarm(
                         hour = targetHour,
                         minute = targetMinute,
                         daysOfWeek = "", // One-time nap alarm
                         isEnabled = true,
                         label = if (label.isBlank()) "Nap (${napDurationMinutes}m)" else label,
-                        barcodeValue = barcodeValue
+                        barcodeValue = barcodeValue,
+                        barcodeLabel = matchedBarcode?.label ?: ""
                     )
                     onSaveAlarm(napAlarm)
                 },

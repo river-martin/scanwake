@@ -24,6 +24,7 @@ class AlarmScheduler(private val context: Context) {
             putExtra(EXTRA_BARCODE_VALUE, alarm.barcodeValue)
             putExtra(EXTRA_RINGTONE_URI, alarm.ringtoneUri)
             putExtra(EXTRA_VIBRATE, alarm.vibrate)
+            putExtra(EXTRA_BARCODE_LABEL, alarm.barcodeLabel)
         }
 
         val pendingIntent = PendingIntent.getBroadcast(
@@ -78,6 +79,7 @@ class AlarmScheduler(private val context: Context) {
         const val EXTRA_BARCODE_VALUE = "extra_barcode_value"
         const val EXTRA_RINGTONE_URI = "extra_ringtone_uri"
         const val EXTRA_VIBRATE = "extra_vibrate"
+        const val EXTRA_BARCODE_LABEL = "extra_barcode_label"
 
         fun calculateNextTriggerTime(alarm: Alarm): Long {
             val now = Calendar.getInstance()

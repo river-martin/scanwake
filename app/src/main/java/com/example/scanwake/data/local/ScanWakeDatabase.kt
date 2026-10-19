@@ -7,7 +7,7 @@ import androidx.room3.RoomDatabase
 import com.example.scanwake.data.model.Alarm
 import com.example.scanwake.data.model.SavedBarcode
 
-@Database(entities = [Alarm::class, SavedBarcode::class], version = 2, exportSchema = false)
+@Database(entities = [Alarm::class, SavedBarcode::class], version = 3, exportSchema = false)
 abstract class ScanWakeDatabase : RoomDatabase() {
 
     abstract fun alarmDao(): AlarmDao

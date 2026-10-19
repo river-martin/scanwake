@@ -42,6 +42,7 @@ class AlarmService : Service() {
         currentBarcodeValue = intent?.getStringExtra(AlarmScheduler.EXTRA_BARCODE_VALUE) ?: ""
         val ringtoneUriStr = intent?.getStringExtra(AlarmScheduler.EXTRA_RINGTONE_URI) ?: ""
         val vibrate = intent?.getBooleanExtra(AlarmScheduler.EXTRA_VIBRATE, true) ?: true
+        val barcodeLabel = intent?.getStringExtra(AlarmScheduler.EXTRA_BARCODE_LABEL) ?: ""
 
         createNotificationChannel()
 
@@ -49,6 +50,7 @@ class AlarmService : Service() {
             putExtra(AlarmScheduler.EXTRA_ALARM_ID, currentAlarmId)
             putExtra(AlarmScheduler.EXTRA_ALARM_LABEL, currentAlarmLabel)
             putExtra(AlarmScheduler.EXTRA_BARCODE_VALUE, currentBarcodeValue)
+            putExtra(AlarmScheduler.EXTRA_BARCODE_LABEL, barcodeLabel)
             setFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
         }
 

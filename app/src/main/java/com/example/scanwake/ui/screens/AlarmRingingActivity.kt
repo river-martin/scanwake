@@ -43,8 +43,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.scanwake.alarm.AlarmScheduler
 import com.example.scanwake.alarm.AlarmService
-import com.example.scanwake.data.local.ScanWakeDatabase
-import com.example.scanwake.data.repository.AlarmRepository
 import com.example.scanwake.ui.theme.ScanWakeTheme
 import kotlinx.coroutines.delay
 
@@ -95,17 +93,8 @@ class AlarmRingingActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    val context = LocalContext.current
-                    val database = remember { ScanWakeDatabase.getDatabase(context) }
-                    val repository = remember { AlarmRepository(database.alarmDao(), database.savedBarcodeDao()) }
-                    var barcodeLabel by remember { mutableStateOf<String?>(null) }
-
-                    LaunchedEffect(requiredBarcode) {
-                        if (requiredBarcode.isNotBlank()) {
-                            val saved = repository.getSavedBarcodeByValue(requiredBarcode)
-                            barcodeLabel = saved?.label
-                        }
-                    }
+                    val initialBarcodeLabel = intent.getStringExtra(AlarmScheduler.EXTRA_BARCODE_LABEL) ?: ""
+                    val barcodeLabel = initialBarcodeLabel.ifBlank { null }
 
                     var wrongBarcodeScanned by remember { mutableStateOf<String?>(null) }
                     var isFailsafeActive by remember { mutableStateOf(false) }

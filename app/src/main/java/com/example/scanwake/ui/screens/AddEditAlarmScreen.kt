@@ -197,6 +197,7 @@ fun AddEditAlarmScreen(
             Button(
                 onClick = {
                     val daysOfWeekString = selectedDays.joinToString(",")
+                    val matchedBarcode = savedBarcodes.find { it.barcodeValue == barcodeValue }
                     val alarmToSave = Alarm(
                         id = initialAlarm?.id ?: 0,
                         hour = timePickerState.hour,
@@ -205,6 +206,7 @@ fun AddEditAlarmScreen(
                         isEnabled = true,
                         label = label,
                         barcodeValue = barcodeValue,
+                        barcodeLabel = matchedBarcode?.label ?: "",
                         ringtoneUri = initialAlarm?.ringtoneUri ?: "",
                         vibrate = initialAlarm?.vibrate ?: true
                     )

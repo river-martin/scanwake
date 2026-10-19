@@ -15,6 +15,7 @@ data class Alarm(
     val isEnabled: Boolean = true,
     val label: String = "",
     val barcodeValue: String = "", // Required barcode string to dismiss
+    val barcodeLabel: String = "", // Saved barcode instance label for lockscreen display
     val ringtoneUri: String = "",
     val vibrate: Boolean = true
 ) {
