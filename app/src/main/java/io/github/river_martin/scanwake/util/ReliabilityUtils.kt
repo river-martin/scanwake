@@ -33,16 +33,16 @@ object ReliabilityUtils {
 
     fun isExactAlarmGranted(context: Context): Boolean {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-            alarmManager.canScheduleExactAlarms()
+            val alarmManager = ContextCompat.getSystemService(context, AlarmManager::class.java)
+            alarmManager?.canScheduleExactAlarms() ?: false
         } else {
             true
         }
     }
 
     fun isBatteryOptimizationIgnored(context: Context): Boolean {
-        val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
-        return powerManager.isIgnoringBatteryOptimizations(context.packageName)
+        val powerManager = ContextCompat.getSystemService(context, PowerManager::class.java)
+        return powerManager?.isIgnoringBatteryOptimizations(context.packageName) ?: false
     }
 
     fun openCameraSettings(context: Context) {

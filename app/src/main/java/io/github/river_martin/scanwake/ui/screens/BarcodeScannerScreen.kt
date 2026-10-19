@@ -7,11 +7,12 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
-import androidx.camera.core.Preview
+import androidx.camera.core.Preview as CameraPreview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -28,7 +29,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -47,14 +47,17 @@ import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import io.github.river_martin.scanwake.scanner.BarcodeAnalyzer
+import io.github.river_martin.scanwake.ui.theme.ScanWakeTheme
 import java.util.concurrent.Executors
 
 @Composable
@@ -99,65 +102,82 @@ fun BarcodeScannerScreen(
         }
     }
 
+    val isPreviewMode = LocalInspectionMode.current
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.Black)
     ) {
-        if (hasCameraPermission) {
-            AndroidView(
-                factory = { ctx ->
-                    val previewView = PreviewView(ctx)
-                    val cameraProviderFuture = ProcessCameraProvider.getInstance(ctx)
-                    val executor = Executors.newSingleThreadExecutor()
+        if (hasCameraPermission || isPreviewMode) {
+            if (isPreviewMode) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color(0xFF222222)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "📷 Camera Preview (Simulated)",
+                        color = Color.White.copy(alpha = 0.6f),
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            } else {
+                AndroidView(
+                    factory = { ctx ->
+                        val previewView = PreviewView(ctx)
+                        val cameraProviderFuture = ProcessCameraProvider.getInstance(ctx)
+                        val executor = Executors.newSingleThreadExecutor()
 
-                    cameraProviderFuture.addListener({
-                        val cameraProvider = cameraProviderFuture.get()
+                        cameraProviderFuture.addListener({
+                            val cameraProvider = cameraProviderFuture.get()
 
-                        val preview = Preview.Builder().build().also {
-                            it.setSurfaceProvider(previewView.surfaceProvider)
-                        }
+                            val preview = CameraPreview.Builder().build().also {
+                                it.surfaceProvider = previewView.surfaceProvider
+                            }
 
-                        val imageAnalysis = ImageAnalysis.Builder()
-                            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                            .build()
+                            val imageAnalysis = ImageAnalysis.Builder()
+                                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                                .build()
 
-                        imageAnalysis.setAnalyzer(
-                            executor,
-                            BarcodeAnalyzer { barcodeText ->
-                                ContextCompat.getMainExecutor(ctx).execute {
-                                    if (onSaveAndUseBarcode != null) {
-                                        if (scannedCodeHolder == null) {
-                                            scannedCodeHolder = barcodeText
+                            imageAnalysis.setAnalyzer(
+                                executor,
+                                BarcodeAnalyzer { barcodeText ->
+                                    ContextCompat.getMainExecutor(ctx).execute {
+                                        if (onSaveAndUseBarcode != null) {
+                                            if (scannedCodeHolder == null) {
+                                                scannedCodeHolder = barcodeText
+                                            }
+                                        } else {
+                                            onBarcodeScanned(barcodeText)
                                         }
-                                    } else {
-                                        onBarcodeScanned(barcodeText)
                                     }
                                 }
-                            }
-                        )
-
-                        val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
-
-                        try {
-                            cameraProvider.unbindAll()
-                            cameraProvider.bindToLifecycle(
-                                lifecycleOwner,
-                                cameraSelector,
-                                preview,
-                                imageAnalysis
                             )
-                        } catch (e: Exception) {
-                            e.printStackTrace()
-                        }
-                    }, ContextCompat.getMainExecutor(ctx))
 
-                    previewView
-                },
-                modifier = Modifier.fillMaxSize()
-            )
+                            val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
 
-            // Scanning Viewfinder Overlay
+                            try {
+                                cameraProvider.unbindAll()
+                                cameraProvider.bindToLifecycle(
+                                    lifecycleOwner,
+                                    cameraSelector,
+                                    preview,
+                                    imageAnalysis
+                                )
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                            }
+                        }, ContextCompat.getMainExecutor(ctx))
+
+                        previewView
+                    },
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+
+            // Viewfinder overlay centered
             Canvas(modifier = Modifier.fillMaxSize()) {
                 val maxBoxWidth = 380.dp.toPx()
                 val boxWidth = minOf(size.width * 0.8f, maxBoxWidth)
@@ -165,12 +185,7 @@ fun BarcodeScannerScreen(
                 val left = (size.width - boxWidth) / 2
                 val top = (size.height - boxHeight) / 2.5f
 
-                // Semi-transparent dark background
-                drawRect(
-                    color = Color.Black.copy(alpha = 0.6f)
-                )
-
-                // Transparent viewfinder cutout
+                drawRect(color = Color.Black.copy(alpha = 0.6f))
                 drawRoundRect(
                     color = Color.Transparent,
                     topLeft = Offset(left, top),
@@ -178,8 +193,6 @@ fun BarcodeScannerScreen(
                     cornerRadius = CornerRadius(16.dp.toPx(), 16.dp.toPx()),
                     blendMode = BlendMode.Clear
                 )
-
-                // White viewfinder border line
                 drawRoundRect(
                     color = Color.White,
                     topLeft = Offset(left, top),
@@ -213,7 +226,6 @@ fun BarcodeScannerScreen(
                 )
             }
 
-            // Back button if onBackClick is provided
             if (onBackClick != null) {
                 IconButton(
                     onClick = onBackClick,
@@ -229,7 +241,6 @@ fun BarcodeScannerScreen(
                 }
             }
 
-            // Emergency Failsafe Button at bottom
             if (onFailsafeClick != null) {
                 Box(
                     modifier = Modifier
@@ -324,7 +335,7 @@ fun BarcodeScannerScreen(
                     .fillMaxSize()
                     .padding(32.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = androidx.compose.foundation.layout.Arrangement.Center
+                verticalArrangement = Arrangement.Center
             ) {
                 Text(
                     text = "Camera Permission Required",
@@ -348,5 +359,25 @@ fun BarcodeScannerScreen(
                 }
             }
         }
+    }
+}
+
+@Preview(name = "Foldable Folded", device = "spec:width=380dp,height=800dp,dpi=420", showBackground = true)
+@Composable
+fun BarcodeScannerScreenFoldedPreview() {
+    ScanWakeTheme {
+        BarcodeScannerScreen(
+            onBarcodeScanned = {}
+        )
+    }
+}
+
+@Preview(name = "Foldable Unfolded", device = "spec:width=673dp,height=841dp,dpi=420", showBackground = true)
+@Composable
+fun BarcodeScannerScreenUnfoldedPreview() {
+    ScanWakeTheme {
+        BarcodeScannerScreen(
+            onBarcodeScanned = {}
+        )
     }
 }

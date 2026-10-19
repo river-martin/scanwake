@@ -11,15 +11,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -28,7 +25,6 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
@@ -36,6 +32,8 @@ import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.SuggestionChipDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.windowsizeclass.WindowSizeClass
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -45,26 +43,39 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.river_martin.scanwake.data.model.Alarm
 import io.github.river_martin.scanwake.data.model.SavedBarcode
 import io.github.river_martin.scanwake.ui.components.BarcodeAssignmentCard
+import io.github.river_martin.scanwake.ui.theme.ScanWakeTheme
 import java.util.Calendar
 import java.util.Locale
 import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.milliseconds
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun NapAlarmScreen(
     savedBarcodes: List<SavedBarcode> = emptyList(),
     scannedBarcode: String? = null,
+    windowSizeClass: WindowSizeClass? = null,
     onScanBarcodeClick: () -> Unit,
     onSaveAlarm: (Alarm) -> Unit,
     onDeleteBarcode: (SavedBarcode) -> Unit,
     onBackClick: () -> Unit
 ) {
+    val screenWidthDp = LocalConfiguration.current.screenWidthDp
+    val currentWidthSizeClass = windowSizeClass?.widthSizeClass ?: when {
+        screenWidthDp < 600 -> WindowWidthSizeClass.Compact
+        screenWidthDp < 840 -> WindowWidthSizeClass.Medium
+        else -> WindowWidthSizeClass.Expanded
+    }
+    val isExpandedOrMedium = currentWidthSizeClass != WindowWidthSizeClass.Compact
+
     var napDurationMinutes by remember { mutableIntStateOf(30) }
     var fallAsleepBufferMinutes by remember { mutableIntStateOf(0) }
     var label by remember { mutableStateOf("Nap (${napDurationMinutes}m)") }
@@ -75,14 +86,13 @@ fun NapAlarmScreen(
     var currentTimeMillis by remember { mutableStateOf(System.currentTimeMillis()) }
     LaunchedEffect(Unit) {
         while (true) {
-            delay(10_000) // update every 10 seconds to keep target time live if user stays on screen
+            delay(10_000.milliseconds)
             currentTimeMillis = System.currentTimeMillis()
         }
     }
 
     val totalMinutes = napDurationMinutes + fallAsleepBufferMinutes
 
-    // Calculate target ring time dynamically based on current time ticker
     val targetCalendar = remember(currentTimeMillis, totalMinutes) {
         Calendar.getInstance().apply {
             timeInMillis = currentTimeMillis
@@ -96,6 +106,21 @@ fun NapAlarmScreen(
 
     BackHandler {
         onBackClick()
+    }
+
+    val startNapAction = {
+        val matchedBarcode = savedBarcodes.find { it.barcodeValue == barcodeValue }
+        val napAlarm =
+            Alarm(
+                hour = targetHour,
+                minute = targetMinute,
+                daysOfWeek = "", // One-time nap alarm
+                isEnabled = true,
+                label = if (label.isBlank()) "Nap (${napDurationMinutes}m)" else label,
+                barcodeValue = barcodeValue,
+                barcodeLabel = matchedBarcode?.label ?: ""
+            )
+        onSaveAlarm(napAlarm)
     }
 
     Scaffold(
@@ -114,219 +139,418 @@ fun NapAlarmScreen(
             )
         }
     ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(
-                    top = paddingValues.calculateTopPadding() + 16.dp,
-                    bottom = paddingValues.calculateBottomPadding() + 16.dp,
-                    start = 16.dp,
-                    end = 16.dp
-                ),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            // Live Nap Ring Time Target Display
-            Card(
+        if (isExpandedOrMedium) {
+            // Adaptive 2-column layout for Unfolded Foldables
+            Row(
                 modifier = Modifier
-                    .widthIn(max = 500.dp)
-                    .fillMaxWidth(),
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
-                )
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(
+                        top = paddingValues.calculateTopPadding() + 16.dp,
+                        bottom = paddingValues.calculateBottomPadding() + 16.dp,
+                        start = 24.dp,
+                        end = 24.dp
+                    ),
+                horizontalArrangement = Arrangement.spacedBy(32.dp),
+                verticalAlignment = Alignment.Top
             ) {
+                // Left Column: Live Ring Time Card + Quick Presets
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(24.dp),
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(20.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer
+                        )
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(24.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = targetTimeFormatted,
+                                fontSize = 52.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = if (fallAsleepBufferMinutes > 0) {
+                                    "Alarm rings in $totalMinutes min ($napDurationMinutes min nap + $fallAsleepBufferMinutes min buffer)"
+                                } else {
+                                    "Alarm will ring in $napDurationMinutes minutes"
+                                },
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    Text(
+                        text = "Quick Presets",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    FlowRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        presetOptions.forEach { minutes ->
+                            val isSelected = napDurationMinutes == minutes
+                            SuggestionChip(
+                                onClick = {
+                                    napDurationMinutes = minutes
+                                    if (label.isBlank() || label.startsWith("Nap")) {
+                                        label = "Nap (${minutes}m)"
+                                    }
+                                },
+                                label = {
+                                    Text(
+                                        text = "${minutes} min",
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                                    )
+                                },
+                                colors = if (isSelected) {
+                                    SuggestionChipDefaults.suggestionChipColors(
+                                        containerColor = MaterialTheme.colorScheme.primary,
+                                        labelColor = MaterialTheme.colorScheme.onPrimary
+                                    )
+                                } else {
+                                    SuggestionChipDefaults.suggestionChipColors()
+                                }
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    Text(
+                        text = "Time to Fall Asleep Buffer",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        val bufferOptions = listOf(0, 5, 10)
+                        bufferOptions.forEach { bufferMinutes ->
+                            val isSelected = fallAsleepBufferMinutes == bufferMinutes
+                            FilterChip(
+                                selected = isSelected,
+                                onClick = { fallAsleepBufferMinutes = bufferMinutes },
+                                label = {
+                                    Text(
+                                        text = if (bufferMinutes == 0) "Off" else "$bufferMinutes min"
+                                    )
+                                }
+                            )
+                        }
+                    }
+                }
+
+                // Right Column: Slider, Label, Barcode Card & Start Nap Button
+                Column(
+                    modifier = Modifier.weight(1f),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = targetTimeFormatted,
-                        fontSize = 48.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                        text = "Custom Duration: $napDurationMinutes minutes",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.fillMaxWidth()
                     )
                     Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = if (fallAsleepBufferMinutes > 0) {
-                            "Alarm rings in $totalMinutes min ($napDurationMinutes min nap + $fallAsleepBufferMinutes min buffer)"
-                        } else {
-                            "Alarm will ring in $napDurationMinutes minutes"
-                        },
-                        style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
-                    )
-                }
-            }
 
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Quick Preset Chips
-            Text(
-                text = "Quick Presets",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-                modifier = Modifier
-                    .widthIn(max = 500.dp)
-                    .fillMaxWidth()
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-
-            FlowRow(
-                modifier = Modifier
-                    .widthIn(max = 500.dp)
-                    .fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                presetOptions.forEach { minutes ->
-                    val isSelected = napDurationMinutes == minutes
-                    SuggestionChip(
-                        onClick = {
-                            napDurationMinutes = minutes
+                    Slider(
+                        value = napDurationMinutes.toFloat(),
+                        onValueChange = { newMinutes ->
+                            napDurationMinutes = newMinutes.toInt()
                             if (label.isBlank() || label.startsWith("Nap")) {
-                                label = "Nap (${minutes}m)"
+                                label = "Nap (${napDurationMinutes}m)"
                             }
                         },
-                        label = {
-                            Text(
-                                text = "${minutes} min",
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-                            )
-                        },
-                        colors = if (isSelected) {
-                            SuggestionChipDefaults.suggestionChipColors(
-                                containerColor = MaterialTheme.colorScheme.primary,
-                                labelColor = MaterialTheme.colorScheme.onPrimary
-                            )
-                        } else {
-                            SuggestionChipDefaults.suggestionChipColors()
-                        }
+                        valueRange = 5f..180f,
+                        steps = 34,
+                        modifier = Modifier.fillMaxWidth()
                     )
-                }
-            }
 
-            Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(20.dp))
 
-            // Time to Fall Asleep Buffer
-            Text(
-                text = "Time to Fall Asleep Buffer",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-                modifier = Modifier
-                    .widthIn(max = 500.dp)
-                    .fillMaxWidth()
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Row(
-                modifier = Modifier
-                    .widthIn(max = 500.dp)
-                    .fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                val bufferOptions = listOf(0, 5, 10)
-                bufferOptions.forEach { bufferMinutes ->
-                    val isSelected = fallAsleepBufferMinutes == bufferMinutes
-                    FilterChip(
-                        selected = isSelected,
-                        onClick = { fallAsleepBufferMinutes = bufferMinutes },
-                        label = {
-                            Text(
-                                text = if (bufferMinutes == 0) "Off" else "$bufferMinutes min"
-                            )
-                        }
+                    OutlinedTextField(
+                        value = label,
+                        onValueChange = { label = it },
+                        label = { Text("Alarm Label") },
+                        placeholder = { Text("e.g. Afternoon Nap") },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp)
                     )
-                }
-            }
 
-            Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(20.dp))
 
-            // Duration Slider
-            Text(
-                text = "Custom Duration: $napDurationMinutes minutes",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-                modifier = Modifier
-                    .widthIn(max = 500.dp)
-                    .fillMaxWidth()
-            )
-            Spacer(modifier = Modifier.height(4.dp))
+                    BarcodeAssignmentCard(
+                        barcodeValue = barcodeValue,
+                        savedBarcodes = savedBarcodes,
+                        onSelectBarcode = { newValue -> barcodeValue = newValue },
+                        onScanBarcodeClick = onScanBarcodeClick,
+                        onDeleteBarcode = onDeleteBarcode,
+                        modifier = Modifier.fillMaxWidth()
+                    )
 
-            Slider(
-                value = napDurationMinutes.toFloat(),
-                onValueChange = { newMinutes ->
-                    napDurationMinutes = newMinutes.toInt()
-                    if (label.isBlank() || label.startsWith("Nap")) {
-                        label = "Nap (${napDurationMinutes}m)"
-                    }
-                },
-                valueRange = 5f..180f,
-                steps = 34, // 5 min increments
-                modifier = Modifier
-                    .widthIn(max = 500.dp)
-                    .fillMaxWidth()
-            )
+                    Spacer(modifier = Modifier.height(28.dp))
 
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // Label Input
-            OutlinedTextField(
-                value = label,
-                onValueChange = { label = it },
-                label = { Text("Alarm Label") },
-                placeholder = { Text("e.g. Afternoon Nap") },
-                modifier = Modifier
-                    .widthIn(max = 500.dp)
-                    .fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp)
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Barcode Assignment Card
-            BarcodeAssignmentCard(
-                barcodeValue = barcodeValue,
-                savedBarcodes = savedBarcodes,
-                onSelectBarcode = { newValue -> barcodeValue = newValue },
-                onScanBarcodeClick = onScanBarcodeClick,
-                onDeleteBarcode = onDeleteBarcode,
-                modifier = Modifier.widthIn(max = 500.dp)
-            )
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            // Save Nap Alarm Button
-            Button(
-                onClick = {
-                    val matchedBarcode = savedBarcodes.find { it.barcodeValue == barcodeValue }
-                    val napAlarm =
-                        Alarm(
-                            hour = targetHour,
-                            minute = targetMinute,
-                            daysOfWeek = "", // One-time nap alarm
-                            isEnabled = true,
-                            label = if (label.isBlank()) "Nap (${napDurationMinutes}m)" else label,
-                            barcodeValue = barcodeValue,
-                            barcodeLabel = matchedBarcode?.label ?: ""
+                    Button(
+                        onClick = startNapAction,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(52.dp),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text(
+                            text = "Start Nap Alarm",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold
                         )
-                    onSaveAlarm(napAlarm)
-                },
+                    }
+                }
+            }
+        } else {
+            // Stacked 1-column layout for Folded Foldable
+            Column(
                 modifier = Modifier
-                    .widthIn(max = 500.dp)
-                    .fillMaxWidth()
-                    .height(52.dp),
-                shape = RoundedCornerShape(12.dp)
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(
+                        top = paddingValues.calculateTopPadding() + 16.dp,
+                        bottom = paddingValues.calculateBottomPadding() + 16.dp,
+                        start = 16.dp,
+                        end = 16.dp
+                    ),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                Card(
+                    modifier = Modifier
+                        .widthIn(max = 500.dp)
+                        .fillMaxWidth(),
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                    )
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = targetTimeFormatted,
+                            fontSize = 48.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = if (fallAsleepBufferMinutes > 0) {
+                                "Alarm rings in $totalMinutes min ($napDurationMinutes min nap + $fallAsleepBufferMinutes min buffer)"
+                            } else {
+                                "Alarm will ring in $napDurationMinutes minutes"
+                            },
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
                 Text(
-                    text = "Start Nap Alarm",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold
+                    text = "Quick Presets",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier
+                        .widthIn(max = 500.dp)
+                        .fillMaxWidth()
                 )
+                Spacer(modifier = Modifier.height(8.dp))
+
+                FlowRow(
+                    modifier = Modifier
+                        .widthIn(max = 500.dp)
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    presetOptions.forEach { minutes ->
+                        val isSelected = napDurationMinutes == minutes
+                        SuggestionChip(
+                            onClick = {
+                                napDurationMinutes = minutes
+                                if (label.isBlank() || label.startsWith("Nap")) {
+                                    label = "Nap (${minutes}m)"
+                                }
+                            },
+                            label = {
+                                Text(
+                                    text = "${minutes} min",
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                                )
+                            },
+                            colors = if (isSelected) {
+                                SuggestionChipDefaults.suggestionChipColors(
+                                    containerColor = MaterialTheme.colorScheme.primary,
+                                    labelColor = MaterialTheme.colorScheme.onPrimary
+                                )
+                            } else {
+                                SuggestionChipDefaults.suggestionChipColors()
+                            }
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Text(
+                    text = "Time to Fall Asleep Buffer",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier
+                        .widthIn(max = 500.dp)
+                        .fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row(
+                    modifier = Modifier
+                        .widthIn(max = 500.dp)
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    val bufferOptions = listOf(0, 5, 10)
+                    bufferOptions.forEach { bufferMinutes ->
+                        val isSelected = fallAsleepBufferMinutes == bufferMinutes
+                        FilterChip(
+                            selected = isSelected,
+                            onClick = { fallAsleepBufferMinutes = bufferMinutes },
+                            label = {
+                                Text(
+                                    text = if (bufferMinutes == 0) "Off" else "$bufferMinutes min"
+                                )
+                            }
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Text(
+                    text = "Custom Duration: $napDurationMinutes minutes",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier
+                        .widthIn(max = 500.dp)
+                        .fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Slider(
+                    value = napDurationMinutes.toFloat(),
+                    onValueChange = { newMinutes ->
+                        napDurationMinutes = newMinutes.toInt()
+                        if (label.isBlank() || label.startsWith("Nap")) {
+                            label = "Nap (${napDurationMinutes}m)"
+                        }
+                    },
+                    valueRange = 5f..180f,
+                    steps = 34,
+                    modifier = Modifier
+                        .widthIn(max = 500.dp)
+                        .fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                OutlinedTextField(
+                    value = label,
+                    onValueChange = { label = it },
+                    label = { Text("Alarm Label") },
+                    placeholder = { Text("e.g. Afternoon Nap") },
+                    modifier = Modifier
+                        .widthIn(max = 500.dp)
+                        .fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp)
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                BarcodeAssignmentCard(
+                    barcodeValue = barcodeValue,
+                    savedBarcodes = savedBarcodes,
+                    onSelectBarcode = { newValue -> barcodeValue = newValue },
+                    onScanBarcodeClick = onScanBarcodeClick,
+                    onDeleteBarcode = onDeleteBarcode,
+                    modifier = Modifier.widthIn(max = 500.dp)
+                )
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                Button(
+                    onClick = startNapAction,
+                    modifier = Modifier
+                        .widthIn(max = 500.dp)
+                        .fillMaxWidth()
+                        .height(52.dp),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text(
+                        text = "Start Nap Alarm",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
         }
+    }
+}
+
+@Preview(name = "Foldable Folded", device = "spec:width=380dp,height=800dp,dpi=420", showBackground = true)
+@Composable
+fun NapAlarmScreenFoldedPreview() {
+    ScanWakeTheme {
+        NapAlarmScreen(
+            onScanBarcodeClick = {},
+            onSaveAlarm = {},
+            onDeleteBarcode = {},
+            onBackClick = {}
+        )
+    }
+}
+
+@Preview(name = "Foldable Unfolded", device = "spec:width=673dp,height=841dp,dpi=420", showBackground = true)
+@Composable
+fun NapAlarmScreenUnfoldedPreview() {
+    ScanWakeTheme {
+        NapAlarmScreen(
+            onScanBarcodeClick = {},
+            onSaveAlarm = {},
+            onDeleteBarcode = {},
+            onBackClick = {}
+        )
     }
 }

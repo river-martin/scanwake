@@ -45,6 +45,11 @@ import io.github.river_martin.scanwake.alarm.AlarmScheduler
 import io.github.river_martin.scanwake.alarm.AlarmService
 import io.github.river_martin.scanwake.ui.theme.ScanWakeTheme
 import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.milliseconds
+
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.material3.windowsizeclass.WindowSizeClass
+import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 
 class AlarmRingingActivity : ComponentActivity() {
 
@@ -54,6 +59,7 @@ class AlarmRingingActivity : ComponentActivity() {
     private var ringtoneUri: String = ""
     private var vibrate: Boolean = true
 
+    @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -88,6 +94,7 @@ class AlarmRingingActivity : ComponentActivity() {
         }
 
         setContent {
+            val windowSizeClass = calculateWindowSizeClass(this)
             ScanWakeTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
@@ -104,13 +111,14 @@ class AlarmRingingActivity : ComponentActivity() {
                     // Auto-clear wrong barcode error banner after 2 seconds to keep scanning continuous
                     LaunchedEffect(wrongBarcodeScanned) {
                         if (wrongBarcodeScanned != null) {
-                            delay(2200)
+                            delay(2200.milliseconds)
                             wrongBarcodeScanned = null
                         }
                     }
 
                     if (isFailsafeActive) {
                         FailsafeTypingScreen(
+                            windowSizeClass = windowSizeClass,
                             onDismissAlarm = {
                                 AlarmService.stopService(
                                     this@AlarmRingingActivity
@@ -237,6 +245,7 @@ class AlarmRingingActivity : ComponentActivity() {
 
 @Composable
 fun FailsafeTypingScreen(
+    windowSizeClass: WindowSizeClass? = null,
     onDismissAlarm: () -> Unit,
     onCancel: () -> Unit,
     onUserTyping: () -> Unit,
@@ -244,12 +253,14 @@ fun FailsafeTypingScreen(
 ) {
     var textInput by remember { mutableStateOf("") }
     val targetPhrase = "I am awake and I cannot scan my barcode right now."
+    val maxBoxWidth = if (windowSizeClass?.widthSizeClass != null &&
+        windowSizeClass.widthSizeClass != androidx.compose.material3.windowsizeclass.WindowWidthSizeClass.Compact) 640.dp else 500.dp
 
     // Inactivity timer logic: if user stops typing for 3.5 seconds, alarm resumes
     LaunchedEffect(textInput) {
         if (textInput.isNotBlank() && textInput.trim() != targetPhrase) {
             onUserTyping()
-            delay(3500L)
+            delay(3500L.milliseconds)
             onUserIdle()
         }
     }
@@ -284,7 +295,7 @@ fun FailsafeTypingScreen(
             // Target phrase reference box
             Surface(
                 modifier = Modifier
-                    .widthIn(max = 500.dp)
+                    .widthIn(max = maxBoxWidth)
                     .fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 color = MaterialTheme.colorScheme.surfaceVariant
@@ -319,7 +330,7 @@ fun FailsafeTypingScreen(
                 label = { Text("Type the phrase here...") },
                 placeholder = { Text("I am awake and I cannot scan my barcode right now.") },
                 modifier = Modifier
-                    .widthIn(max = 500.dp)
+                    .widthIn(max = maxBoxWidth)
                     .fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp)
             )
@@ -337,7 +348,7 @@ fun FailsafeTypingScreen(
             Button(
                 onClick = onCancel,
                 modifier = Modifier
-                    .widthIn(max = 500.dp)
+                    .widthIn(max = maxBoxWidth)
                     .fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp)
             ) {

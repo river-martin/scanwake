@@ -54,6 +54,12 @@ dependencies {
     // Navigation Compose
     implementation(libs.androidx.navigation.compose)
 
+    // Material 3 Window Size Class & Adaptive Layouts
+    implementation(libs.androidx.compose.windowsizeclass)
+    implementation(libs.androidx.compose.adaptive)
+    implementation(libs.androidx.compose.adaptive.layout)
+    implementation(libs.androidx.compose.adaptive.navigation)
+
     // Room Database
     implementation(libs.androidx.room3.runtime)
     ksp(libs.androidx.room3.compiler)

@@ -9,6 +9,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,6 +20,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -36,12 +40,15 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.windowsizeclass.WindowSizeClass
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -53,21 +60,34 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import io.github.river_martin.scanwake.ui.theme.ScanWakeTheme
 import io.github.river_martin.scanwake.util.ReliabilityUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReliabilityChecklistScreen(
+    windowSizeClass: WindowSizeClass? = null,
     onContinueClick: () -> Unit,
     onBackClick: (() -> Unit)? = null
 ) {
+    val screenWidthDp = LocalConfiguration.current.screenWidthDp
+    val currentWidthSizeClass = windowSizeClass?.widthSizeClass ?: when {
+        screenWidthDp < 600 -> WindowWidthSizeClass.Compact
+        screenWidthDp < 840 -> WindowWidthSizeClass.Medium
+        else -> WindowWidthSizeClass.Expanded
+    }
+    val isExpandedOrMedium = currentWidthSizeClass != WindowWidthSizeClass.Compact
+
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
 
@@ -77,10 +97,11 @@ fun ReliabilityChecklistScreen(
         }
     }
 
-    var cameraGranted by remember { mutableStateOf(ReliabilityUtils.isCameraGranted(context)) }
-    var notificationGranted by remember { mutableStateOf(ReliabilityUtils.isNotificationGranted(context)) }
-    var exactAlarmGranted by remember { mutableStateOf(ReliabilityUtils.isExactAlarmGranted(context)) }
-    var batteryOptimizationIgnored by remember { mutableStateOf(ReliabilityUtils.isBatteryOptimizationIgnored(context)) }
+    val isPreview = LocalInspectionMode.current
+    var cameraGranted by remember { mutableStateOf(if (isPreview) true else ReliabilityUtils.isCameraGranted(context)) }
+    var notificationGranted by remember { mutableStateOf(if (isPreview) true else ReliabilityUtils.isNotificationGranted(context)) }
+    var exactAlarmGranted by remember { mutableStateOf(if (isPreview) true else ReliabilityUtils.isExactAlarmGranted(context)) }
+    var batteryOptimizationIgnored by remember { mutableStateOf(if (isPreview) true else ReliabilityUtils.isBatteryOptimizationIgnored(context)) }
 
     val cameraPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
@@ -96,7 +117,7 @@ fun ReliabilityChecklistScreen(
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) {
+            if (event == Lifecycle.Event.ON_RESUME && !isPreview) {
                 cameraGranted = ReliabilityUtils.isCameraGranted(context)
                 notificationGranted = ReliabilityUtils.isNotificationGranted(context)
                 exactAlarmGranted = ReliabilityUtils.isExactAlarmGranted(context)
@@ -120,7 +141,7 @@ fun ReliabilityChecklistScreen(
                 },
                 navigationIcon = if (onBackClick != null) {
                     {
-                        androidx.compose.material3.IconButton(onClick = onBackClick) {
+                        IconButton(onClick = onBackClick) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "Back"
@@ -160,115 +181,208 @@ fun ReliabilityChecklistScreen(
             }
         }
     ) { paddingValues ->
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = androidx.compose.foundation.layout.PaddingValues(
-                top = paddingValues.calculateTopPadding() + 16.dp,
-                bottom = paddingValues.calculateBottomPadding() + 16.dp,
-                start = 16.dp,
-                end = 16.dp
-            ),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(14.dp)
-        ) {
-            item {
-                Column(
-                    modifier = Modifier
-                        .widthIn(max = 500.dp)
-                        .fillMaxWidth()
-                ) {
-                    Text(
-                        text = "Ensure 100% Alarm Reliability",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
+        if (isExpandedOrMedium) {
+            // Adaptive 2-column Grid for Unfolded Foldables & Wide Screens
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2),
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(
+                    top = paddingValues.calculateTopPadding() + 16.dp,
+                    bottom = paddingValues.calculateBottomPadding() + 16.dp,
+                    start = 24.dp,
+                    end = 24.dp
+                ),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                item(span = { GridItemSpan(2) }) {
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        Text(
+                            text = "Ensure 100% Alarm Reliability",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "To guarantee your alarms always ring on time and won't be suppressed by Doze mode or device manufacturers, please complete the checks below.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                    }
+                }
+
+                item {
+                    ReliabilityCard(
+                        icon = Icons.Default.Alarm,
+                        title = "Exact Alarms Permission",
+                        description = "Required to trigger alarms at the precise minute without Doze mode delays.",
+                        isGranted = exactAlarmGranted,
+                        actionText = "Open Settings",
+                        onActionClick = { ReliabilityUtils.openExactAlarmSettings(context) },
+                        modifier = Modifier.fillMaxWidth()
                     )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "To guarantee your alarms always ring on time and won't be suppressed by Doze mode or device manufacturers, please complete the checks below.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                }
+
+                item {
+                    ReliabilityCard(
+                        icon = Icons.Default.Notifications,
+                        title = "Notification Permission",
+                        description = "Required to show high-priority alarm alerts and foreground audio service.",
+                        isGranted = notificationGranted,
+                        actionText = "Grant Permission",
+                        onActionClick = {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                            } else {
+                                ReliabilityUtils.openNotificationSettings(context)
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth()
                     )
-                    Spacer(modifier = Modifier.height(4.dp))
+                }
+
+                item {
+                    ReliabilityCard(
+                        icon = Icons.Default.QrCodeScanner,
+                        title = "Camera Permission",
+                        description = "Required for scanning barcodes to dismiss your morning alarms.",
+                        isGranted = cameraGranted,
+                        actionText = "Grant Camera",
+                        onActionClick = {
+                            cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+
+                item {
+                    ReliabilityCard(
+                        icon = Icons.Default.BatteryChargingFull,
+                        title = "Ignore Battery Optimizations",
+                        description = "Prevents Android from killing the background alarm worker and media playback.",
+                        isGranted = batteryOptimizationIgnored,
+                        actionText = "Disable Optimization",
+                        onActionClick = { ReliabilityUtils.openBatteryOptimizationSettings(context) },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+
+                item(span = { GridItemSpan(2) }) {
+                    OemReliabilityCard(
+                        onOpenGuideClick = { ReliabilityUtils.openDontKillMyApp(context) },
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
             }
+        } else {
+            // Stacked 1-column layout for Folded Foldable & Compact screens
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(
+                    top = paddingValues.calculateTopPadding() + 16.dp,
+                    bottom = paddingValues.calculateBottomPadding() + 16.dp,
+                    start = 16.dp,
+                    end = 16.dp
+                ),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                item {
+                    Column(
+                        modifier = Modifier
+                            .widthIn(max = 500.dp)
+                            .fillMaxWidth()
+                    ) {
+                        Text(
+                            text = "Ensure 100% Alarm Reliability",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "To guarantee your alarms always ring on time and won't be suppressed by Doze mode or device manufacturers, please complete the checks below.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                    }
+                }
 
-            // 1. Exact Alarms
-            item {
-                ReliabilityCard(
-                    icon = Icons.Default.Alarm,
-                    title = "Exact Alarms Permission",
-                    description = "Required to trigger alarms at the precise minute without Doze mode delays.",
-                    isGranted = exactAlarmGranted,
-                    actionText = "Open Settings",
-                    onActionClick = { ReliabilityUtils.openExactAlarmSettings(context) },
-                    modifier = Modifier
-                        .widthIn(max = 500.dp)
-                        .fillMaxWidth()
-                )
-            }
+                item {
+                    ReliabilityCard(
+                        icon = Icons.Default.Alarm,
+                        title = "Exact Alarms Permission",
+                        description = "Required to trigger alarms at the precise minute without Doze mode delays.",
+                        isGranted = exactAlarmGranted,
+                        actionText = "Open Settings",
+                        onActionClick = { ReliabilityUtils.openExactAlarmSettings(context) },
+                        modifier = Modifier
+                            .widthIn(max = 500.dp)
+                            .fillMaxWidth()
+                    )
+                }
 
-            // 2. Notifications
-            item {
-                ReliabilityCard(
-                    icon = Icons.Default.Notifications,
-                    title = "Notification Permission",
-                    description = "Required to show high-priority alarm alerts and foreground audio service.",
-                    isGranted = notificationGranted,
-                    actionText = "Grant Permission",
-                    onActionClick = {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                        } else {
-                            ReliabilityUtils.openNotificationSettings(context)
-                        }
-                    },
-                    modifier = Modifier
-                        .widthIn(max = 500.dp)
-                        .fillMaxWidth()
-                )
-            }
+                item {
+                    ReliabilityCard(
+                        icon = Icons.Default.Notifications,
+                        title = "Notification Permission",
+                        description = "Required to show high-priority alarm alerts and foreground audio service.",
+                        isGranted = notificationGranted,
+                        actionText = "Grant Permission",
+                        onActionClick = {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                            } else {
+                                ReliabilityUtils.openNotificationSettings(context)
+                            }
+                        },
+                        modifier = Modifier
+                            .widthIn(max = 500.dp)
+                            .fillMaxWidth()
+                    )
+                }
 
-            // 3. Camera
-            item {
-                ReliabilityCard(
-                    icon = Icons.Default.QrCodeScanner,
-                    title = "Camera Permission",
-                    description = "Required for scanning barcodes to dismiss your morning alarms.",
-                    isGranted = cameraGranted,
-                    actionText = "Grant Camera",
-                    onActionClick = {
-                        cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
-                    },
-                    modifier = Modifier
-                        .widthIn(max = 500.dp)
-                        .fillMaxWidth()
-                )
-            }
+                item {
+                    ReliabilityCard(
+                        icon = Icons.Default.QrCodeScanner,
+                        title = "Camera Permission",
+                        description = "Required for scanning barcodes to dismiss your morning alarms.",
+                        isGranted = cameraGranted,
+                        actionText = "Grant Camera",
+                        onActionClick = {
+                            cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                        },
+                        modifier = Modifier
+                            .widthIn(max = 500.dp)
+                            .fillMaxWidth()
+                    )
+                }
 
-            // 4. Battery Optimization
-            item {
-                ReliabilityCard(
-                    icon = Icons.Default.BatteryChargingFull,
-                    title = "Ignore Battery Optimizations",
-                    description = "Prevents Android from killing the background alarm worker and media playback.",
-                    isGranted = batteryOptimizationIgnored,
-                    actionText = "Disable Optimization",
-                    onActionClick = { ReliabilityUtils.openBatteryOptimizationSettings(context) },
-                    modifier = Modifier
-                        .widthIn(max = 500.dp)
-                        .fillMaxWidth()
-                )
-            }
+                item {
+                    ReliabilityCard(
+                        icon = Icons.Default.BatteryChargingFull,
+                        title = "Ignore Battery Optimizations",
+                        description = "Prevents Android from killing the background alarm worker and media playback.",
+                        isGranted = batteryOptimizationIgnored,
+                        actionText = "Disable Optimization",
+                        onActionClick = { ReliabilityUtils.openBatteryOptimizationSettings(context) },
+                        modifier = Modifier
+                            .widthIn(max = 500.dp)
+                            .fillMaxWidth()
+                    )
+                }
 
-            // 5. OEM / Don't Kill My App
-            item {
-                OemReliabilityCard(
-                    onOpenGuideClick = { ReliabilityUtils.openDontKillMyApp(context) },
-                    modifier = Modifier
-                        .widthIn(max = 500.dp)
-                        .fillMaxWidth()
-                )
+                item {
+                    OemReliabilityCard(
+                        onOpenGuideClick = { ReliabilityUtils.openDontKillMyApp(context) },
+                        modifier = Modifier
+                            .widthIn(max = 500.dp)
+                            .fillMaxWidth()
+                    )
+                }
             }
         }
     }
@@ -442,5 +556,27 @@ fun OemReliabilityCard(
                 Text(text = "Open dontkillmyapp.com Guide", fontWeight = FontWeight.Bold)
             }
         }
+    }
+}
+
+@Preview(name = "Foldable Folded", device = "spec:width=380dp,height=800dp,dpi=420", showBackground = true)
+@Composable
+fun ReliabilityChecklistScreenFoldedPreview() {
+    ScanWakeTheme {
+        ReliabilityChecklistScreen(
+            onContinueClick = {},
+            onBackClick = {}
+        )
+    }
+}
+
+@Preview(name = "Foldable Unfolded", device = "spec:width=673dp,height=841dp,dpi=420", showBackground = true)
+@Composable
+fun ReliabilityChecklistScreenUnfoldedPreview() {
+    ScanWakeTheme {
+        ReliabilityChecklistScreen(
+            onContinueClick = {},
+            onBackClick = {}
+        )
     }
 }

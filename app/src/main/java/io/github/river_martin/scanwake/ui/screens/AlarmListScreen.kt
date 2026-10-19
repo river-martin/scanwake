@@ -38,6 +38,8 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.windowsizeclass.WindowSizeClass
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -45,17 +47,21 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.river_martin.scanwake.data.model.Alarm
 import io.github.river_martin.scanwake.data.model.SavedBarcode
+import io.github.river_martin.scanwake.ui.theme.ScanWakeTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AlarmListScreen(
     alarms: List<Alarm>,
     savedBarcodes: List<SavedBarcode> = emptyList(),
+    windowSizeClass: WindowSizeClass? = null,
     onReliabilityClick: () -> Unit,
     onAddAlarmClick: () -> Unit,
     onAddNapAlarmClick: () -> Unit,
@@ -64,6 +70,61 @@ fun AlarmListScreen(
     onDeleteAlarm: (Alarm) -> Unit
 ) {
     var isFabMenuExpanded by remember { mutableStateOf(false) }
+
+    val screenWidthDp = LocalConfiguration.current.screenWidthDp
+    val currentWidthSizeClass = windowSizeClass?.widthSizeClass ?: when {
+        screenWidthDp < 600 -> WindowWidthSizeClass.Compact
+        screenWidthDp < 840 -> WindowWidthSizeClass.Medium
+        else -> WindowWidthSizeClass.Expanded
+    }
+    val isExpandedOrMedium = currentWidthSizeClass != WindowWidthSizeClass.Compact
+
+    val fabContent = @Composable {
+        Box {
+            FloatingActionButton(
+                onClick = { isFabMenuExpanded = true },
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = "Add Alarm"
+                )
+            }
+
+            DropdownMenu(
+                expanded = isFabMenuExpanded,
+                onDismissRequest = { isFabMenuExpanded = false }
+            ) {
+                DropdownMenuItem(
+                    text = { Text("Normal Alarm") },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Alarm,
+                            contentDescription = null
+                        )
+                    },
+                    onClick = {
+                        isFabMenuExpanded = false
+                        onAddAlarmClick()
+                    }
+                )
+                DropdownMenuItem(
+                    text = { Text("Nap Alarm") },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Timer,
+                            contentDescription = null
+                        )
+                    },
+                    onClick = {
+                        isFabMenuExpanded = false
+                        onAddNapAlarmClick()
+                    }
+                )
+            }
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -90,50 +151,7 @@ fun AlarmListScreen(
             )
         },
         floatingActionButton = {
-            Box {
-                FloatingActionButton(
-                    onClick = { isFabMenuExpanded = true },
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "Add Alarm"
-                    )
-                }
-
-                DropdownMenu(
-                    expanded = isFabMenuExpanded,
-                    onDismissRequest = { isFabMenuExpanded = false }
-                ) {
-                    DropdownMenuItem(
-                        text = { Text("Normal Alarm") },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.Alarm,
-                                contentDescription = null
-                            )
-                        },
-                        onClick = {
-                            isFabMenuExpanded = false
-                            onAddAlarmClick()
-                        }
-                    )
-                    DropdownMenuItem(
-                        text = { Text("Nap Alarm") },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.Timer,
-                                contentDescription = null
-                            )
-                        },
-                        onClick = {
-                            isFabMenuExpanded = false
-                            onAddNapAlarmClick()
-                        }
-                    )
-                }
-            }
+            fabContent()
         }
     ) { paddingValues ->
         Box(
@@ -168,8 +186,9 @@ fun AlarmListScreen(
                     )
                 }
             } else {
+                val minCardWidth = if (isExpandedOrMedium) 260.dp else 280.dp
                 LazyVerticalGrid(
-                    columns = GridCells.Adaptive(minSize = 300.dp),
+                    columns = GridCells.Adaptive(minSize = minCardWidth),
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(
                         top = paddingValues.calculateTopPadding() + 16.dp,
@@ -177,8 +196,8 @@ fun AlarmListScreen(
                         start = 16.dp,
                         end = 16.dp
                     ),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     items(alarms, key = { it.id }) { alarm ->
                         AlarmItemCard(
@@ -295,5 +314,43 @@ fun AlarmItemCard(
                 }
             }
         }
+    }
+}
+
+@Preview(name = "Foldable Folded", device = "spec:width=380dp,height=800dp,dpi=420", showBackground = true)
+@Composable
+fun AlarmListScreenFoldedPreview() {
+    ScanWakeTheme {
+        AlarmListScreen(
+            alarms = listOf(
+                Alarm(id = 1, hour = 7, minute = 30, daysOfWeek = "2,3,4,5,6", isEnabled = true, label = "Work Alarm"),
+                Alarm(id = 2, hour = 14, minute = 0, daysOfWeek = "", isEnabled = false, label = "Nap")
+            ),
+            onReliabilityClick = {},
+            onAddAlarmClick = {},
+            onAddNapAlarmClick = {},
+            onEditAlarmClick = {},
+            onToggleAlarm = { _, _ -> },
+            onDeleteAlarm = {}
+        )
+    }
+}
+
+@Preview(name = "Foldable Unfolded", device = "spec:width=673dp,height=841dp,dpi=420", showBackground = true)
+@Composable
+fun AlarmListScreenUnfoldedPreview() {
+    ScanWakeTheme {
+        AlarmListScreen(
+            alarms = listOf(
+                Alarm(id = 1, hour = 7, minute = 30, daysOfWeek = "2,3,4,5,6", isEnabled = true, label = "Work Alarm"),
+                Alarm(id = 2, hour = 14, minute = 0, daysOfWeek = "", isEnabled = false, label = "Nap")
+            ),
+            onReliabilityClick = {},
+            onAddAlarmClick = {},
+            onAddNapAlarmClick = {},
+            onEditAlarmClick = {},
+            onToggleAlarm = { _, _ -> },
+            onDeleteAlarm = {}
+        )
     }
 }
