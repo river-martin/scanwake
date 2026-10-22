@@ -34,7 +34,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.Saver
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -81,13 +82,18 @@ fun AddEditAlarmScreen(
         is24Hour = true
     )
 
-    var label by remember { mutableStateOf(initialAlarm?.label ?: "") }
-    var barcodeValue by remember {
+    var label by rememberSaveable { mutableStateOf(initialAlarm?.label ?: "") }
+    var barcodeValue by rememberSaveable(scannedBarcode) {
         mutableStateOf(scannedBarcode ?: initialAlarm?.barcodeValue ?: "")
     }
 
     // Days set state (Calendar.MONDAY = 2, Calendar.TUESDAY = 3, etc.)
-    var selectedDays by remember {
+    var selectedDays by rememberSaveable(
+        saver = Saver(
+            save = { ArrayList(it.value) },
+            restore = { mutableStateOf(it.toSet()) }
+        )
+    ) {
         mutableStateOf(initialAlarm?.getDaysSet() ?: emptySet())
     }
 
