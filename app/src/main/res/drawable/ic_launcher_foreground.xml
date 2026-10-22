@@ -1,30 +1,67 @@
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
-    android:viewportWidth="108"
-    android:viewportHeight="108">
-    <path android:pathData="M31,63.928c0,0 6.4,-11 12.1,-13.1c7.2,-2.6 26,-1.4 26,-1.4l38.1,38.1L107,108.928l-32,-1L31,63.928z">
-        <aapt:attr name="android:fillColor">
-            <gradient
-                android:endX="85.84757"
-                android:endY="92.4963"
-                android:startX="42.9492"
-                android:startY="49.59793"
-                android:type="linear">
-                <item
-                    android:color="#44000000"
-                    android:offset="0.0" />
-                <item
-                    android:color="#00000000"
-                    android:offset="1.0" />
-            </gradient>
-        </aapt:attr>
-    </path>
-    <path
-        android:fillColor="#FFFFFF"
-        android:fillType="nonZero"
-        android:pathData="M65.3,45.828l3.8,-6.6c0.2,-0.4 0.1,-0.9 -0.3,-1.1c-0.4,-0.2 -0.9,-0.1 -1.1,0.3l-3.9,6.7c-6.3,-2.8 -13.4,-2.8 -19.7,0l-3.9,-6.7c-0.2,-0.4 -0.7,-0.5 -1.1,-0.3C38.8,38.328 38.7,38.828 38.9,39.228l3.8,6.6C36.2,49.428 31.7,56.028 31,63.928h46C76.3,56.028 71.8,49.428 65.3,45.828zM43.4,57.328c-0.8,0 -1.5,-0.5 -1.8,-1.2c-0.3,-0.7 -0.1,-1.5 0.4,-2.1c0.5,-0.5 1.4,-0.7 2.1,-0.4c0.7,0.3 1.2,1 1.2,1.8C45.3,56.528 44.5,57.328 43.4,57.328L43.4,57.328zM64.6,57.328c-0.8,0 -1.5,-0.5 -1.8,-1.2s-0.1,-1.5 0.4,-2.1c0.5,-0.5 1.4,-0.7 2.1,-0.4c0.7,0.3 1.2,1 1.2,1.8C66.5,56.528 65.6,57.328 64.6,57.328L64.6,57.328z"
-        android:strokeWidth="1"
-        android:strokeColor="#00000000" />
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+  <group android:scaleX="0.54"
+      android:scaleY="0.54"
+      android:translateX="5.52"
+      android:translateY="5.52">
+
+      <!-- Left Ear (Rounded) -->
+      <path
+          android:fillColor="#FFFFFFFF"
+          android:pathData="M5.84,4.56 L4.43,5.97 C4.04,6.36 3.41,6.36 3.02,5.97 C2.63,5.58 2.63,4.95 3.02,4.56 L4.43,3.15 C4.82,2.76 5.45,2.76 5.84,3.15 C6.23,3.54 6.23,4.17 5.84,4.56 Z" />
+
+      <!-- Right Ear (Rounded) -->
+      <path
+          android:fillColor="#FFFFFFFF"
+          android:pathData="M18.16,4.56 C17.77,4.17 17.77,3.54 18.16,3.15 C18.55,2.76 19.18,2.76 19.57,3.15 L20.98,4.56 C21.37,4.95 21.37,5.58 20.98,5.97 C20.59,6.36 19.96,6.36 19.57,5.97 L18.16,4.56 Z" />
+
+      <!-- Clock Body -->
+      <path
+          android:fillColor="#FFFFFFFF"
+          android:pathData="M12,4 C7.03,4 3,8.03 3,13 C3,17.97 7.03,22 12,22 C16.97,22 21,17.97 21,13 C21,8.03 16.97,4 12,4 Z M12,20 C8.13,20 5,16.87 5,13 C5,9.13 8.13,6 12,6 C15.87,6 19,9.13 19,13 C19,16.87 15.87,20 12,20 Z" />
+
+      <!-- Barcode Slits (Uniform height: Y = 10.3 to 15.7) -->
+      <!-- Bar 1 (Outer Left) -->
+      <path
+          android:fillColor="#FFFFFFFF"
+          android:pathData="M6.8,10.3 H7.6 V15.7 H6.8 Z" />
+
+      <!-- Bar 2 (Medium Left) -->
+      <path
+          android:fillColor="#FFFFFFFF"
+          android:pathData="M8.2,10.3 H9.0 V15.7 H8.2 Z" />
+
+      <!-- Bar 3 (Thin) -->
+      <path
+          android:fillColor="#FFFFFFFF"
+          android:pathData="M9.6,10.3 H10.1 V15.7 H9.6 Z" />
+
+      <!-- Bar 4 (Thick Center-Left) -->
+      <path
+          android:fillColor="#FFFFFFFF"
+          android:pathData="M10.8,10.3 H11.7 V15.7 H10.8 Z" />
+
+      <!-- Bar 5 (Thin Center-Right) -->
+      <path
+          android:fillColor="#FFFFFFFF"
+          android:pathData="M12.4,10.3 H12.9 V15.7 H12.4 Z" />
+
+      <!-- Bar 6 (Thick Right) -->
+      <path
+          android:fillColor="#FFFFFFFF"
+          android:pathData="M13.6,10.3 H14.6 V15.7 H13.6 Z" />
+
+      <!-- Bar 7 (Medium Right) -->
+      <path
+          android:fillColor="#FFFFFFFF"
+          android:pathData="M15.2,10.3 H15.8 V15.7 H15.2 Z" />
+
+      <!-- Bar 8 (Outer Right) -->
+      <path
+          android:fillColor="#FFFFFFFF"
+          android:pathData="M16.4,10.3 H17.2 V15.7 H16.4 Z" />
+  </group>
 </vector>

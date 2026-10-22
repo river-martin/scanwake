@@ -1,0 +1,62 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <!-- Left Ear (Rounded) -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M5.84,4.56 L4.43,5.97 C4.04,6.36 3.41,6.36 3.02,5.97 C2.63,5.58 2.63,4.95 3.02,4.56 L4.43,3.15 C4.82,2.76 5.45,2.76 5.84,3.15 C6.23,3.54 6.23,4.17 5.84,4.56 Z" />
+
+    <!-- Right Ear (Rounded) -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M18.16,4.56 C17.77,4.17 17.77,3.54 18.16,3.15 C18.55,2.76 19.18,2.76 19.57,3.15 L20.98,4.56 C21.37,4.95 21.37,5.58 20.98,5.97 C20.59,6.36 19.96,6.36 19.57,5.97 L18.16,4.56 Z" />
+
+    <!-- Clock Body -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M12,4 C7.03,4 3,8.03 3,13 C3,17.97 7.03,22 12,22 C16.97,22 21,17.97 21,13 C21,8.03 16.97,4 12,4 Z M12,20 C8.13,20 5,16.87 5,13 C5,9.13 8.13,6 12,6 C15.87,6 19,9.13 19,13 C19,16.87 15.87,20 12,20 Z" />
+
+    <!-- Barcode Slits (Uniform height: Y = 10.3 to 15.7) -->
+    <!-- Bar 1 (Outer Left) -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M6.8,10.3 H7.6 V15.7 H6.8 Z" />
+
+    <!-- Bar 2 (Medium Left) -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M8.2,10.3 H9.0 V15.7 H8.2 Z" />
+
+    <!-- Bar 3 (Thin) -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M9.6,10.3 H10.1 V15.7 H9.6 Z" />
+
+    <!-- Bar 4 (Thick Center-Left) -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M10.8,10.3 H11.7 V15.7 H10.8 Z" />
+
+    <!-- Bar 5 (Thin Center-Right) -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M12.4,10.3 H12.9 V15.7 H12.4 Z" />
+
+    <!-- Bar 6 (Thick Right) -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M13.6,10.3 H14.6 V15.7 H13.6 Z" />
+
+    <!-- Bar 7 (Medium Right) -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M15.2,10.3 H15.8 V15.7 H15.2 Z" />
+
+    <!-- Bar 8 (Outer Right) -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M16.4,10.3 H17.2 V15.7 H16.4 Z" />
+</vector>
