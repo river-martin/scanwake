@@ -1,5 +1,9 @@
 import com.android.build.api.dsl.ApplicationExtension
 
+dependencyLocking {
+    lockAllConfigurations()
+}
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
