@@ -1,0 +1,1 @@
+Alarm clock that rings until you scan a barcode

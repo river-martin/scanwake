@@ -1,0 +1,25 @@
+ScanWake is an alarm clock that won't stop until you get out of bed and scan a barcode. Stick a barcode somewhere you have to walk to, like the kitchen or bathroom, or just scan any barcode you own, such as a cereal box or toothpaste.
+
+<b>Features</b>
+<ul>
+<li>Repeating alarms with custom days and labels</li>
+<li>Require any barcode, or assign a specific one to each alarm</li>
+<li>Save and name barcodes, then reuse them across alarms</li>
+<li>Nap alarms with quick presets, a custom duration, and an optional fall-asleep buffer</li>
+<li>Emergency failsafe so you're never locked out of dismissing an alarm</li>
+<li>Built-in reliability checklist for exact alarms, notifications, camera and battery optimization</li>
+<li>Material 3 design with adaptive layouts that work on phones, foldables and tablets</li>
+</ul>
+
+<b>Privacy</b>
+<ul>
+<li>No internet permission, so the app cannot send anything anywhere</li>
+<li>No telemetry, analytics, ads or in-app purchases</li>
+<li>Barcode scanning happens entirely on your device (zxing-cpp)</li>
+</ul>
+
+<b>Open source</b>
+ScanWake is free (libre) software, licensed under the AGPL. Source code and issue tracker: https://github.com/river-martin/scanwake
+
+<b>Note</b>
+Alarm reliability depends on your phone's battery management. Some manufacturers aggressively stop background apps, so please go through the checklist in the app and test your alarm before relying on it.
