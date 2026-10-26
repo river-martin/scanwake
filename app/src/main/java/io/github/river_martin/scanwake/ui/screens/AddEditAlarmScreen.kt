@@ -172,7 +172,6 @@ fun AddEditAlarmScreen(
                         text = "Alarm Time",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     TimePicker(state = timePickerState)
@@ -352,6 +351,7 @@ private fun DaysOfWeekSelector(
                         Text(
                             text = dayName,
                             fontSize = 13.sp,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                             textAlign = TextAlign.Center,
                             modifier = Modifier.fillMaxWidth()
                         )

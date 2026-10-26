@@ -243,9 +243,10 @@ fun BarcodeAssignmentCard(
                             label = {
                                 Text(
                                     text = savedItem.label,
-                                    fontSize = 12.sp
+                                    fontSize = 12.sp,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
                                 )
-                            }
+                            },
                         )
                     }
                 }

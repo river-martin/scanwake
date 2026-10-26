@@ -28,8 +28,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
-import androidx.compose.material3.SuggestionChip
-import androidx.compose.material3.SuggestionChipDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
@@ -210,7 +208,8 @@ fun NapAlarmScreen(
                     ) {
                         presetOptions.forEach { minutes ->
                             val isSelected = napDurationMinutes == minutes
-                            SuggestionChip(
+                            FilterChip(
+                                selected = isSelected,
                                 onClick = {
                                     napDurationMinutes = minutes
                                     if (label.isBlank() || label.startsWith("Nap")) {
@@ -222,14 +221,6 @@ fun NapAlarmScreen(
                                         text = "${minutes} min",
                                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
                                     )
-                                },
-                                colors = if (isSelected) {
-                                    SuggestionChipDefaults.suggestionChipColors(
-                                        containerColor = MaterialTheme.colorScheme.primary,
-                                        labelColor = MaterialTheme.colorScheme.onPrimary
-                                    )
-                                } else {
-                                    SuggestionChipDefaults.suggestionChipColors()
                                 }
                             )
                         }
@@ -400,7 +391,8 @@ fun NapAlarmScreen(
                 ) {
                     presetOptions.forEach { minutes ->
                         val isSelected = napDurationMinutes == minutes
-                        SuggestionChip(
+                        FilterChip(
+                            selected = isSelected,
                             onClick = {
                                 napDurationMinutes = minutes
                                 if (label.isBlank() || label.startsWith("Nap")) {
@@ -412,14 +404,6 @@ fun NapAlarmScreen(
                                     text = "${minutes} min",
                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
                                 )
-                            },
-                            colors = if (isSelected) {
-                                SuggestionChipDefaults.suggestionChipColors(
-                                    containerColor = MaterialTheme.colorScheme.primary,
-                                    labelColor = MaterialTheme.colorScheme.onPrimary
-                                )
-                            } else {
-                                SuggestionChipDefaults.suggestionChipColors()
                             }
                         )
                     }

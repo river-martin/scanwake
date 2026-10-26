@@ -200,7 +200,7 @@ class AlarmRingingActivity : ComponentActivity() {
                                     Box(
                                         modifier = Modifier
                                             .fillMaxWidth()
-                                            .background(Color.Red.copy(alpha = 0.92f))
+                                            .background(Color.Red)
                                             .clickable { wrongBarcodeScanned = null }
                                             .padding(20.dp),
                                         contentAlignment = Alignment.Center
