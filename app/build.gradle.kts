@@ -1,5 +1,12 @@
 import com.android.build.api.dsl.ApplicationExtension
 
+android {
+    dependenciesInfo {
+        includeInApk = false
+        includeInBundle = false
+    }
+}
+
 dependencyLocking {
     lockAllConfigurations()
 }
