@@ -36,7 +36,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -59,6 +58,8 @@ class AlarmRingingActivity : ComponentActivity() {
     private var ringtoneUri: String = ""
     private var vibrate: Boolean = true
 
+    private var barcodeLabel: String? = null
+
     @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -68,6 +69,8 @@ class AlarmRingingActivity : ComponentActivity() {
         requiredBarcode = intent.getStringExtra(AlarmScheduler.EXTRA_BARCODE_VALUE) ?: ""
         ringtoneUri = intent.getStringExtra(AlarmScheduler.EXTRA_RINGTONE_URI) ?: ""
         vibrate = intent.getBooleanExtra(AlarmScheduler.EXTRA_VIBRATE, true)
+        barcodeLabel =
+            intent.getStringExtra(AlarmScheduler.EXTRA_BARCODE_LABEL)
 
         // Prevent exiting alarm ringing screen via Back Button or Back Gesture
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
@@ -100,10 +103,6 @@ class AlarmRingingActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    val initialBarcodeLabel =
-                        intent.getStringExtra(AlarmScheduler.EXTRA_BARCODE_LABEL)
-                            ?: ""
-                    val barcodeLabel = initialBarcodeLabel.ifBlank { null }
 
                     var wrongBarcodeScanned by remember { mutableStateOf<String?>(null) }
                     var isFailsafeActive by remember { mutableStateOf(false) }

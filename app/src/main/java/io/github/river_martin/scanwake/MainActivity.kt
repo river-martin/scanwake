@@ -1,5 +1,6 @@
 package io.github.river_martin.scanwake
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -10,8 +11,11 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.ui.Modifier
+import io.github.river_martin.scanwake.alarm.AlarmScheduler
+import io.github.river_martin.scanwake.alarm.AlarmService
 import io.github.river_martin.scanwake.ui.theme.ScanWakeTheme
 import io.github.river_martin.scanwake.ui.navigation.ScanWakeNavGraph
+import io.github.river_martin.scanwake.ui.screens.AlarmRingingActivity
 
 class MainActivity : ComponentActivity() {
 
@@ -30,6 +34,22 @@ class MainActivity : ComponentActivity() {
                     ScanWakeNavGraph(windowSizeClass = windowSizeClass)
                 }
             }
+        }
+    }
+
+    override fun onStart() {
+        super.onStart()
+
+        if (AlarmService.isRinging) {
+            val fullScreenIntent = Intent(this, AlarmRingingActivity::class.java).apply {
+                putExtra(AlarmScheduler.EXTRA_ALARM_ID, AlarmService.currentAlarmId)
+                putExtra(AlarmScheduler.EXTRA_ALARM_LABEL, AlarmService.currentAlarmLabel)
+                putExtra(AlarmScheduler.EXTRA_BARCODE_VALUE, AlarmService.currentBarcodeValue)
+                putExtra(AlarmScheduler.EXTRA_BARCODE_LABEL, AlarmService.currentBarcodeLabel)
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            }
+            startActivity(fullScreenIntent)
+            finish()
         }
     }
 }

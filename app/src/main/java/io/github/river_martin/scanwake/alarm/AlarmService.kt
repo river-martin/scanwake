@@ -25,10 +25,6 @@ class AlarmService : Service() {
     private var mediaPlayer: MediaPlayer? = null
     private var vibrator: Vibrator? = null
 
-    private var currentAlarmId: Long = -1L
-    private var currentAlarmLabel: String = ""
-    private var currentBarcodeValue: String = ""
-
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -40,9 +36,9 @@ class AlarmService : Service() {
         currentAlarmId = intent?.getLongExtra(AlarmScheduler.EXTRA_ALARM_ID, -1L) ?: -1L
         currentAlarmLabel = intent?.getStringExtra(AlarmScheduler.EXTRA_ALARM_LABEL) ?: ""
         currentBarcodeValue = intent?.getStringExtra(AlarmScheduler.EXTRA_BARCODE_VALUE) ?: ""
-        val ringtoneUriStr = intent?.getStringExtra(AlarmScheduler.EXTRA_RINGTONE_URI) ?: ""
-        val vibrate = intent?.getBooleanExtra(AlarmScheduler.EXTRA_VIBRATE, true) ?: true
-        val barcodeLabel = intent?.getStringExtra(AlarmScheduler.EXTRA_BARCODE_LABEL) ?: ""
+        currentRingtoneUriStr = intent?.getStringExtra(AlarmScheduler.EXTRA_RINGTONE_URI) ?: ""
+        currentVibrate = intent?.getBooleanExtra(AlarmScheduler.EXTRA_VIBRATE, true) ?: true
+        currentBarcodeLabel = intent?.getStringExtra(AlarmScheduler.EXTRA_BARCODE_LABEL) ?: ""
 
         createNotificationChannel()
 
@@ -50,7 +46,7 @@ class AlarmService : Service() {
             putExtra(AlarmScheduler.EXTRA_ALARM_ID, currentAlarmId)
             putExtra(AlarmScheduler.EXTRA_ALARM_LABEL, currentAlarmLabel)
             putExtra(AlarmScheduler.EXTRA_BARCODE_VALUE, currentBarcodeValue)
-            putExtra(AlarmScheduler.EXTRA_BARCODE_LABEL, barcodeLabel)
+            putExtra(AlarmScheduler.EXTRA_BARCODE_LABEL, currentBarcodeLabel)
             setFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
         }
 
@@ -74,10 +70,11 @@ class AlarmService : Service() {
 
         startForeground(NOTIFICATION_ID, notification)
 
-        startRingtone(ringtoneUriStr)
-        if (vibrate) {
+        startRingtone(currentRingtoneUriStr)
+        if (currentVibrate) {
             startVibration()
         }
+        isRinging = true
 
         return START_STICKY
     }
@@ -155,6 +152,8 @@ class AlarmService : Service() {
             e.printStackTrace()
         }
 
+        isRinging = false
+
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
     }
@@ -183,6 +182,27 @@ class AlarmService : Service() {
         const val CHANNEL_ID = "scanwake_alarm_channel"
         const val NOTIFICATION_ID = 1001
         const val ACTION_STOP_ALARM = "io.github.river_martin.scanwake.alarm.ACTION_STOP_ALARM"
+
+        var isRinging: Boolean = false
+            private set
+
+        var currentAlarmId: Long = -1L
+            private set
+
+        var currentAlarmLabel: String = ""
+            private set
+
+        var currentBarcodeValue: String = ""
+            private set
+
+        var currentBarcodeLabel: String = ""
+            private set
+
+        var currentRingtoneUriStr: String = ""
+            private set
+
+        var currentVibrate: Boolean = true
+            private set
 
         fun stopService(context: Context) {
             val intent = Intent(context, AlarmService::class.java).apply {
