@@ -57,7 +57,7 @@ How can you be sure ScanWake respects your privacy?
 - **Reproducible Builds & Binary Verification:** ScanWake's build is 100% reproducible and passes
   F-Droid's build pipeline verification. This means you can independently verify that the official
   GitHub release APK matches the APK compiled by F-Droid's independent build servers (verifiable
-  via [fdroiddata pipeline logs](https://gitlab.com/river-martin/fdroiddata/-/pipelines)), proving
+  via [pipeline logs on my fork of fdroiddata](https://gitlab.com/river-martin/fdroiddata/-/pipelines)), proving
   the binaries were built straight from the public source code without modification.
 
 ---
