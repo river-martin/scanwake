@@ -90,7 +90,9 @@ submitted for official inclusion.
 Alarm reliability heavily depends on your phone's aggressive battery management. Some manufacturers
 (like Samsung, Xiaomi, or Huawei) aggressively kill background tasks and alarms. Please make sure to
 go through the **Reliability Checklist** inside the app and test your alarm before relying on it for
-important mornings!
+important mornings! 
+
+*Note: ScanWake is primarily tested on Android 16+. If you run into any quirks or issues on older supported versions (API 26+), please open an issue on GitHub!*
 
 ---
 
