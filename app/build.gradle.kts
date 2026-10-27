@@ -1,4 +1,6 @@
 import com.android.build.api.dsl.ApplicationExtension
+import java.security.MessageDigest
+import java.io.File
 
 android {
     dependenciesInfo {
@@ -50,6 +52,16 @@ extensions.configure<ApplicationExtension> {
     }
 }
 
+androidComponents {
+    val versionName = extensions.getByType<ApplicationExtension>().defaultConfig.versionName
+        ?: error("versionName must be set in defaultConfig")
+    onVariants { variant ->
+        variant.outputs.forEach { output ->
+            output.outputFileName.set("ScanWake-v$versionName.apk")
+        }
+    }
+}
+
 dependencies {
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
@@ -87,4 +99,32 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
+}
+
+tasks.register("generateChecksums") {
+    notCompatibleWithConfigurationCache("Custom script task reading build outputs")
+    dependsOn("assembleRelease")
+    doLast {
+        val searchDirs = listOf(
+            file("${layout.buildDirectory.get()}/outputs/apk/release"),
+            File(project.projectDir, "release")
+        )
+        var found = false
+        searchDirs.forEach { dir ->
+            if (dir.exists()) {
+                dir.listFiles { f -> f.extension == "apk" }?.forEach { apkFile ->
+                    val bytes = apkFile.readBytes()
+                    val digest = MessageDigest.getInstance("SHA-256").digest(bytes)
+                    val sha256 = digest.joinToString("") { b: Byte -> "%02x".format(b) }
+                    val checksumFile = File(project.rootProject.projectDir, "checksums.txt")
+                    checksumFile.writeText("$sha256  ${apkFile.name}\n")
+                    println("Generated SHA-256 checksum for ${apkFile.name}: $sha256 at ${checksumFile.absolutePath}")
+                    found = true
+                }
+            }
+        }
+        if (!found) {
+            println("Warning: No release APK found in build outputs or app/release directory.")
+        }
+    }
 }
