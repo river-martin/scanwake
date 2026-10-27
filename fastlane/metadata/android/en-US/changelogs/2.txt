@@ -1,0 +1,3 @@
+- Fixed alarm redirect on launch when an alarm is active
+- Disabled dependency metadata in APK for F-Droid reproducibility
+- Added comprehensive README and AI usage transparency notes
