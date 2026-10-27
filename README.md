@@ -101,6 +101,9 @@ important mornings!
 - **Database:** Room
 - **Scanner:** CameraX + zxing-cpp
 
+ScanWake is my first-ever Android app. It was built with heavy assistance from Gemini in Android
+Studio, blurring the line between guided learning and pure vibe coding.
+
 ---
 
 ## 📜 License
