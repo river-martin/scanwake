@@ -103,7 +103,6 @@ dependencies {
 
 tasks.register("generateChecksums") {
     notCompatibleWithConfigurationCache("Custom script task reading build outputs")
-    dependsOn("assembleRelease")
     doLast {
         val searchDirs = listOf(
             file("${layout.buildDirectory.get()}/outputs/apk/release"),
@@ -116,7 +115,7 @@ tasks.register("generateChecksums") {
                     val bytes = apkFile.readBytes()
                     val digest = MessageDigest.getInstance("SHA-256").digest(bytes)
                     val sha256 = digest.joinToString("") { b: Byte -> "%02x".format(b) }
-                    val checksumFile = File(project.rootProject.projectDir, "checksums.txt")
+                    val checksumFile = File(apkFile.parentFile, "checksums.txt")
                     checksumFile.writeText("$sha256  ${apkFile.name}\n")
                     println("Generated SHA-256 checksum for ${apkFile.name}: $sha256 at ${checksumFile.absolutePath}")
                     found = true
@@ -127,4 +126,9 @@ tasks.register("generateChecksums") {
             println("Warning: No release APK found in build outputs or app/release directory.")
         }
     }
+}
+
+afterEvaluate {
+    tasks.findByName("signReleaseApk")?.finalizedBy("generateChecksums")
+    tasks.findByName("packageRelease")?.finalizedBy("generateChecksums")
 }
