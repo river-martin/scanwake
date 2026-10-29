@@ -7,6 +7,11 @@ android {
         includeInApk = false
         includeInBundle = false
     }
+    buildTypes {
+        getByName("release") {
+            signingConfig = signingConfigs.getByName("debug")
+        }
+    }
 }
 
 dependencyLocking {
@@ -37,10 +42,7 @@ extensions.configure<ApplicationExtension> {
 
     buildTypes {
         release {
-            optimization {
-                enable = true
-                packageScope = setOf("androidx.**", "kotlin.**", "kotlinx.**")
-            }
+            // optimization block removed to prevent R8 bytecode corruption on Kotlin collections / Lifecycle
         }
     }
     compileOptions {
