@@ -82,9 +82,8 @@ class AlarmScheduler(private val context: Context) {
         const val EXTRA_VIBRATE = "extra_vibrate"
         const val EXTRA_BARCODE_LABEL = "extra_barcode_label"
 
-        fun calculateNextTriggerTime(alarm: Alarm): Long {
-            val now = Calendar.getInstance()
-            val target = Calendar.getInstance().apply {
+        fun calculateNextTriggerTime(alarm: Alarm, now: Calendar = Calendar.getInstance()): Long {
+            val target = (now.clone() as Calendar).apply {
                 set(Calendar.HOUR_OF_DAY, alarm.hour)
                 set(Calendar.MINUTE, alarm.minute)
                 set(Calendar.SECOND, 0)

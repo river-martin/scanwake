@@ -71,6 +71,21 @@ fun ScanWakeNavGraph(
     val alarms by repository.allAlarms.collectAsState(initial = emptyList())
     val savedBarcodes by repository.allSavedBarcodes.collectAsState(initial = emptyList())
 
+    // Self-healing startup check: ensure all enabled alarms are scheduled (handles force-stops / app kills)
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        scope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            try {
+                val enabledAlarms = repository.getEnabledAlarms()
+                enabledAlarms.forEach { alarm ->
+                    scheduler.schedule(alarm)
+                    BootAlarmStorage.save(context, alarm)
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("ScanWakeBoot", "Error in startup alarm re-scheduling", e)
+            }
+        }
+    }
+
     // Temporary holder for barcode scanned in AddEdit or Nap screen
     var tempScannedBarcode by remember { mutableStateOf<String?>(null) }
 
