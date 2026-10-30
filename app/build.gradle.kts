@@ -107,7 +107,6 @@ tasks.register("generateChecksums") {
     notCompatibleWithConfigurationCache("Custom script task reading build outputs")
     doLast {
         val searchDirs = listOf(
-            file("${layout.buildDirectory.get()}/outputs/apk/release"),
             File(project.projectDir, "release")
         )
         var found = false
