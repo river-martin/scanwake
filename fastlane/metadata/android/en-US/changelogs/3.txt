@@ -1,0 +1,3 @@
+- Fixed alarm scheduling and parsing issues when using commas in alarm labels
+- Added robust self-healing synchronization between database and alarm manager on launch and device boot
+- Disabled experimental build optimizations to prevent potential runtime crashes
