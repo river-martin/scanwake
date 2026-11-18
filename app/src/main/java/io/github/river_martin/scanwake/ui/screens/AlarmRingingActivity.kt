@@ -91,8 +91,8 @@ class AlarmRingingActivity : ComponentActivity() {
             @Suppress("DEPRECATION")
             window.addFlags(
                 WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
-                        WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON or
-                        WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
+                    WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON or
+                    WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
             )
         }
 
@@ -162,8 +162,8 @@ class AlarmRingingActivity : ComponentActivity() {
                                 },
                                 onBarcodeScanned = { scannedValue ->
                                     val isValid = requiredBarcode.isBlank() ||
-                                            scannedValue.trim()
-                                                .equals(requiredBarcode.trim(), ignoreCase = true)
+                                        scannedValue.trim()
+                                            .equals(requiredBarcode.trim(), ignoreCase = true)
 
                                     if (isValid) {
                                         // Correct barcode scanned -> stop alarm service and finish
@@ -253,7 +253,8 @@ fun FailsafeTypingScreen(
     var textInput by remember { mutableStateOf("") }
     val targetPhrase = "I am awake and I cannot scan my barcode right now."
     val maxBoxWidth = if (windowSizeClass?.widthSizeClass != null &&
-        windowSizeClass.widthSizeClass != androidx.compose.material3.windowsizeclass.WindowWidthSizeClass.Compact) 640.dp else 500.dp
+        windowSizeClass.widthSizeClass != androidx.compose.material3.windowsizeclass.WindowWidthSizeClass.Compact
+    ) 640.dp else 500.dp
 
     // Inactivity timer logic: if user stops typing for 3.5 seconds, alarm resumes
     LaunchedEffect(textInput) {

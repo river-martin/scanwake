@@ -2,6 +2,7 @@ package io.github.river_martin.scanwake.ui.screens
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -12,6 +13,7 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,19 +22,25 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.FlashlightOff
+import androidx.compose.material.icons.filled.FlashlightOn
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LargeFloatingActionButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -40,6 +48,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -47,6 +56,7 @@ import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
@@ -80,6 +90,16 @@ fun BarcodeScannerScreen(
 
     var scannedCodeHolder by remember { mutableStateOf<String?>(null) }
     var barcodeLabelInput by remember { mutableStateOf("") }
+    var cameraInstance by remember { mutableStateOf<androidx.camera.core.Camera?>(null) }
+    var isTorchOn by remember { mutableStateOf(false) }
+    var viewfinderBottomPx by remember { mutableStateOf(0f) }
+    var screenHeightPx by remember { mutableStateOf(0f) }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            cameraInstance?.cameraControl?.enableTorch(false)
+        }
+    }
 
     var hasCameraPermission by remember {
         mutableStateOf(
@@ -160,12 +180,13 @@ fun BarcodeScannerScreen(
 
                             try {
                                 cameraProvider.unbindAll()
-                                cameraProvider.bindToLifecycle(
+                                val camera = cameraProvider.bindToLifecycle(
                                     lifecycleOwner,
                                     cameraSelector,
                                     preview,
                                     imageAnalysis
                                 )
+                                cameraInstance = camera
                             } catch (e: Exception) {
                                 e.printStackTrace()
                             }
@@ -179,11 +200,13 @@ fun BarcodeScannerScreen(
 
             // Viewfinder overlay centered
             Canvas(modifier = Modifier.fillMaxSize()) {
+                screenHeightPx = size.height
                 val maxBoxWidth = 380.dp.toPx()
                 val boxWidth = minOf(size.width * 0.8f, maxBoxWidth)
                 val boxHeight = boxWidth * 0.55f
                 val left = (size.width - boxWidth) / 2
                 val top = (size.height - boxHeight) / 2.5f
+                viewfinderBottomPx = top + boxHeight
 
                 drawRect(color = Color.Black.copy(alpha = 0.6f))
                 drawRoundRect(
@@ -238,6 +261,62 @@ fun BarcodeScannerScreen(
                         contentDescription = "Back",
                         tint = Color.White
                     )
+                }
+            }
+
+            if (viewfinderBottomPx > 0f && screenHeightPx > 0f) {
+                val density = LocalDensity.current
+                val failsafeTopPx = with(density) {
+                    if (onFailsafeClick != null) {
+                        screenHeightPx - 96.dp.toPx() // 40.dp bottom padding + 56.dp button height
+                    } else {
+                        screenHeightPx - 40.dp.toPx()
+                    }
+                }
+                val torchCenterY = (viewfinderBottomPx + failsafeTopPx) / 2f
+                val torchTopY = torchCenterY - with(density) { 32.dp.toPx() }
+                val torchTopDp = with(density) { maxOf(0f, torchTopY).toDp() }
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.TopCenter)
+                        .padding(top = torchTopDp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(64.dp)
+                            .clip(CircleShape)
+                            .background(if (isTorchOn) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant)
+                            .clickable {
+                                val cam = cameraInstance
+                                if (cam != null && cam.cameraInfo.hasFlashUnit()) {
+                                    isTorchOn = !isTorchOn
+                                    cam.cameraControl.enableTorch(isTorchOn)
+                                } else if (isPreviewMode) {
+                                    isTorchOn = !isTorchOn
+                                    Toast.makeText(
+                                        context,
+                                        "Flashlight toggled (Simulated)",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                } else {
+                                    Toast.makeText(
+                                        context,
+                                        "Flashlight not available on this device",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = if (isTorchOn) Icons.Default.FlashlightOn else Icons.Default.FlashlightOff,
+                            contentDescription = if (isTorchOn) "Turn Off Flashlight" else "Turn On Flashlight",
+                            tint = if (isTorchOn) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
             }
 
@@ -362,7 +441,11 @@ fun BarcodeScannerScreen(
     }
 }
 
-@Preview(name = "Z Fold 8 Ultra Folded", device = "spec:width=411dp,height=960dp,dpi=420", showBackground = true)
+@Preview(
+    name = "Z Fold 8 Ultra Folded",
+    device = "spec:width=411dp,height=960dp,dpi=420",
+    showBackground = true
+)
 @Composable
 fun BarcodeScannerScreenFoldedPreview() {
     ScanWakeTheme {
@@ -372,7 +455,11 @@ fun BarcodeScannerScreenFoldedPreview() {
     }
 }
 
-@Preview(name = "Z Fold 8 Ultra Unfolded", device = "spec:width=860dp,height=954dp,dpi=420", showBackground = true)
+@Preview(
+    name = "Z Fold 8 Ultra Unfolded",
+    device = "spec:width=860dp,height=954dp,dpi=420",
+    showBackground = true
+)
 @Composable
 fun BarcodeScannerScreenUnfoldedPreview() {
     ScanWakeTheme {
