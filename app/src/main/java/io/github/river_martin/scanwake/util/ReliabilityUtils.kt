@@ -82,22 +82,6 @@ object ReliabilityUtils {
         }
     }
 
-    fun openBatteryOptimizationSettings(context: Context) {
-        try {
-            val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
-                data = Uri.parse("package:${context.packageName}")
-            }
-            context.startActivity(intent)
-        } catch (e: Exception) {
-            try {
-                val intent = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
-                context.startActivity(intent)
-            } catch (e2: Exception) {
-                openAppSettings(context)
-            }
-        }
-    }
-
     fun openDontKillMyApp(context: Context) {
         val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://dontkillmyapp.com/"))
         context.startActivity(intent)

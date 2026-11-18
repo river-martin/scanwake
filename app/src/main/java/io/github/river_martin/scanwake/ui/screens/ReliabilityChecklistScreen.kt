@@ -257,18 +257,6 @@ fun ReliabilityChecklistScreen(
                     )
                 }
 
-                item {
-                    ReliabilityCard(
-                        icon = Icons.Default.BatteryChargingFull,
-                        title = "Ignore Battery Optimizations",
-                        description = "Prevents Android from killing the background alarm worker and media playback.",
-                        isGranted = batteryOptimizationIgnored,
-                        actionText = "Disable Optimization",
-                        onActionClick = { ReliabilityUtils.openBatteryOptimizationSettings(context) },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-
                 item(span = { GridItemSpan(2) }) {
                     OemReliabilityCard(
                         onOpenGuideClick = { ReliabilityUtils.openDontKillMyApp(context) },
@@ -355,20 +343,6 @@ fun ReliabilityChecklistScreen(
                         onActionClick = {
                             cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
                         },
-                        modifier = Modifier
-                            .widthIn(max = 500.dp)
-                            .fillMaxWidth()
-                    )
-                }
-
-                item {
-                    ReliabilityCard(
-                        icon = Icons.Default.BatteryChargingFull,
-                        title = "Ignore Battery Optimizations",
-                        description = "Prevents Android from killing the background alarm worker and media playback.",
-                        isGranted = batteryOptimizationIgnored,
-                        actionText = "Disable Optimization",
-                        onActionClick = { ReliabilityUtils.openBatteryOptimizationSettings(context) },
                         modifier = Modifier
                             .widthIn(max = 500.dp)
                             .fillMaxWidth()
