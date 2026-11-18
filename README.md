@@ -55,9 +55,10 @@ How can you be sure ScanWake respects your privacy?
   request `android.permission.INTERNET`. It is physically incapable of sending data anywhere.
 - **Zero Telemetry & Ads:** No analytics, crash reporting SDKs, ads, or third-party trackers.
 - **Reproducible Builds & Binary Verification:** ScanWake's build is 100% reproducible and passes
-  F-Droid's build pipeline verification. This means you can independently verify that the official
+  F-Droid's build pipeline. This means you can independently verify that the official
   GitHub release APK matches the APK compiled by F-Droid's independent build servers (verifiable
-  via [pipeline logs on my fork of fdroiddata](https://gitlab.com/river-martin/fdroiddata/-/pipelines)), proving
+  via [pipeline logs on my fork of fdroiddata](https://gitlab.com/river-martin/fdroiddata/-/pipelines)),
+  proving
   the binaries were built straight from the public source code without modification.
 
 ---
@@ -90,9 +91,10 @@ submitted for official inclusion.
 Alarm reliability heavily depends on your phone's aggressive battery management. Some manufacturers
 (like Samsung, Xiaomi, or Huawei) aggressively kill background tasks and alarms. Please make sure to
 go through the **Reliability Checklist** inside the app and test your alarm before relying on it for
-important mornings! 
+important mornings!
 
-*Note: ScanWake is primarily tested on Android 16+. If you run into any quirks or issues on older supported versions (API 26+), please open an issue on GitHub!*
+*Note: ScanWake is primarily tested on Android 16+. If you run into any quirks or issues on older
+supported versions (API 27+), please open an issue on GitHub!*
 
 ---
 
