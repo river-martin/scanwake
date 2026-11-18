@@ -39,7 +39,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -64,7 +65,9 @@ fun AddEditAlarmScreen(
     onDeleteBarcode: (SavedBarcode) -> Unit,
     onBackClick: () -> Unit
 ) {
-    val screenWidthDp = LocalConfiguration.current.screenWidthDp
+    val screenWidthDp = with(LocalDensity.current) {
+        LocalWindowInfo.current.containerSize.width.toDp().value
+    }
     val currentWidthSizeClass = windowSizeClass?.widthSizeClass ?: when {
         screenWidthDp < 600 -> WindowWidthSizeClass.Compact
         screenWidthDp < 840 -> WindowWidthSizeClass.Medium

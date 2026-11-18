@@ -60,7 +60,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.platform.LocalLifecycleOwner
@@ -80,7 +81,9 @@ fun ReliabilityChecklistScreen(
     onContinueClick: () -> Unit,
     onBackClick: (() -> Unit)? = null
 ) {
-    val screenWidthDp = LocalConfiguration.current.screenWidthDp
+    val screenWidthDp = with(LocalDensity.current) {
+        LocalWindowInfo.current.containerSize.width.toDp().value
+    }
     val currentWidthSizeClass = windowSizeClass?.widthSizeClass ?: when {
         screenWidthDp < 600 -> WindowWidthSizeClass.Compact
         screenWidthDp < 840 -> WindowWidthSizeClass.Medium
