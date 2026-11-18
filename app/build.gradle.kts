@@ -32,7 +32,7 @@ extensions.configure<ApplicationExtension> {
 
     defaultConfig {
         applicationId = "io.github.river_martin.scanwake"
-        minSdk = 26
+        minSdk = 27
         targetSdk = 37
         versionCode = 4
         versionName = "1.0.3"

@@ -84,17 +84,8 @@ class AlarmRingingActivity : ComponentActivity() {
         })
 
         // Enable show over lockscreen & turn screen on
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
-            setShowWhenLocked(true)
-            setTurnScreenOn(true)
-        } else {
-            @Suppress("DEPRECATION")
-            window.addFlags(
-                WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
-                    WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON or
-                    WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
-            )
-        }
+        setShowWhenLocked(true)
+        setTurnScreenOn(true)
 
         setContent {
             val windowSizeClass = calculateWindowSizeClass(this)
@@ -150,7 +141,7 @@ class AlarmRingingActivity : ComponentActivity() {
                     } else {
                         Box(modifier = Modifier.fillMaxSize()) {
                             BarcodeScannerScreen(
-                                titleText = if (alarmLabel.isNotBlank()) alarmLabel else "ALARM RINGING",
+                                titleText = alarmLabel.ifBlank { "ALARM RINGING" },
                                 instructionText = if (requiredBarcode.isNotBlank()) {
                                     if (barcodeLabel != null) {
                                         "Scan assigned barcode: $barcodeLabel"

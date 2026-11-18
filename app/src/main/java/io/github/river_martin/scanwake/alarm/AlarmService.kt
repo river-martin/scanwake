@@ -19,6 +19,7 @@ import android.os.VibratorManager
 import androidx.core.app.NotificationCompat
 import io.github.river_martin.scanwake.R
 import io.github.river_martin.scanwake.ui.screens.AlarmRingingActivity
+import androidx.core.net.toUri
 
 class AlarmService : Service() {
 
@@ -57,7 +58,7 @@ class AlarmService : Service() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        val title = if (currentAlarmLabel.isNotBlank()) currentAlarmLabel else "Alarm Ringing"
+        val title = currentAlarmLabel.ifBlank { "Alarm Ringing" }
         val notification: Notification = NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle(title)
             .setContentText("Scan barcode to dismiss alarm")
@@ -96,7 +97,7 @@ class AlarmService : Service() {
     private fun startRingtone(uriStr: String) {
         try {
             val ringtoneUri = if (uriStr.isNotBlank()) {
-                Uri.parse(uriStr)
+                uriStr.toUri()
             } else {
                 RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
                     ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)

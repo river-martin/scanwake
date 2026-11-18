@@ -10,6 +10,7 @@ import android.os.Build
 import android.os.PowerManager
 import android.provider.Settings
 import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
 
 object ReliabilityUtils {
 
@@ -47,7 +48,7 @@ object ReliabilityUtils {
 
     fun openCameraSettings(context: Context) {
         val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-            data = Uri.parse("package:${context.packageName}")
+            data = "package:${context.packageName}".toUri()
         }
         context.startActivity(intent)
     }
@@ -56,7 +57,7 @@ object ReliabilityUtils {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             try {
                 val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
-                    data = Uri.parse("package:${context.packageName}")
+                    data = "package:${context.packageName}".toUri()
                 }
                 context.startActivity(intent)
             } catch (e: Exception) {
@@ -68,28 +69,24 @@ object ReliabilityUtils {
     }
 
     fun openNotificationSettings(context: Context) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
-                putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
-            }
-            try {
-                context.startActivity(intent)
-            } catch (e: Exception) {
-                openAppSettings(context)
-            }
-        } else {
+        val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+            putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+        }
+        try {
+            context.startActivity(intent)
+        } catch (e: Exception) {
             openAppSettings(context)
         }
     }
 
     fun openDontKillMyApp(context: Context) {
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://dontkillmyapp.com/"))
+        val intent = Intent(Intent.ACTION_VIEW, "https://dontkillmyapp.com/".toUri())
         context.startActivity(intent)
     }
 
     fun openAppSettings(context: Context) {
         val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-            data = Uri.parse("package:${context.packageName}")
+            data = "package:${context.packageName}".toUri()
         }
         context.startActivity(intent)
     }

@@ -36,6 +36,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -57,7 +58,7 @@ import java.util.Locale
 import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.milliseconds
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NapAlarmScreen(
     savedBarcodes: List<SavedBarcode> = emptyList(),
@@ -85,7 +86,7 @@ fun NapAlarmScreen(
 
     val presetOptions = listOf(20, 30, 60, 90)
 
-    var currentTimeMillis by remember { mutableStateOf(System.currentTimeMillis()) }
+    var currentTimeMillis by remember { mutableLongStateOf(System.currentTimeMillis()) }
     LaunchedEffect(Unit) {
         while (true) {
             delay(10_000.milliseconds)
@@ -118,7 +119,7 @@ fun NapAlarmScreen(
                 minute = targetMinute,
                 daysOfWeek = "", // One-time nap alarm
                 isEnabled = true,
-                label = if (label.isBlank()) "Nap (${napDurationMinutes}m)" else label,
+                label = label.ifBlank { "Nap (${napDurationMinutes}m)" },
                 barcodeValue = barcodeValue,
                 barcodeLabel = matchedBarcode?.label ?: ""
             )
@@ -221,7 +222,7 @@ fun NapAlarmScreen(
                                 },
                                 label = {
                                     Text(
-                                        text = "${minutes} min",
+                                        text = "$minutes min",
                                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
                                     )
                                 }
@@ -404,7 +405,7 @@ fun NapAlarmScreen(
                             },
                             label = {
                                 Text(
-                                    text = "${minutes} min",
+                                    text = "$minutes min",
                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
                                 )
                             }
